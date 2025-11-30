@@ -4,9 +4,15 @@ import { NextResponse } from "next/server";
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   await connectDB();
-  const quiz = await Quiz.findById(params.id);
+  const { id } = await params;
+  const quiz = await Quiz.findById(id);
+
+  if (!quiz) {
+    return NextResponse.json({ error: "Quiz not found" }, { status: 404 });
+  }
+
   return NextResponse.json(quiz);
 }

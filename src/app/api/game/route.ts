@@ -5,14 +5,21 @@ import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   await connectDB();
-  const body = await req.json(); // expects { quizId: "..." }
+  const body: { quizId?: string } = await req.json(); // expects { quizId: "..." }
+
+  if (!body.quizId) {
+    return NextResponse.json({ error: "quizId is required" }, { status: 400 });
+  }
 
   const newGame = await Game.create({
     quizId: body.quizId,
     pin: generatePin(),
   });
 
-  return NextResponse.json(newGame, { status: 201 });
+  return NextResponse.json(
+    { id: String(newGame._id), pin: newGame.pin, quizId: String(newGame.quizId) },
+    { status: 201 }
+  );
 }
 
 export async function GET() {

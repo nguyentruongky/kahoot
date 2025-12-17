@@ -2,9 +2,17 @@ import Image from "next/image";
 
 export default function HomePage() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-blue-100">
-      <h1 className="text-4xl font-bold text-blue-600 mb-4">Kahoot Clone 🎯</h1>
-      <p className="text-lg text-gray-700">Next.js + TailwindCSS is working!</p>
+    <div className="min-h-screen bg-linear-to-br from-indigo-500 via-purple-500 to-pink-500 flex flex-col items-center justify-center px-6">
+      {/* Header */}
+      <h1 className="text-5xl md:text-6xl font-extrabold text-white drop-shadow-lg mb-6 text-center">
+        Quiz Master 🎯
+      </h1>
+
+      {/* Subtitle */}
+      <p className="text-xl md:text-2xl text-white/90 font-light text-center max-w-2xl mb-10">
+        Challenge yourself with fun, fast-paced quiz questions. Test your
+        knowledge — compete, learn, and enjoy!
+      </p>
     </div>
   );
 }

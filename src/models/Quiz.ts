@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const QuestionSchema = new mongoose.Schema({
   text: { type: String, required: true },
   options: { type: [String], required: true },
-  correctAnswer: { type: String, required: true }, // ✅ store the actual answer text
+  correctAnswer: { type: Number, required: true }, // 0-based index into `options`
 });
 
 const QuizSchema = new mongoose.Schema({
@@ -11,4 +11,8 @@ const QuizSchema = new mongoose.Schema({
   questions: { type: [QuestionSchema], required: true },
 });
 
-export default mongoose.models.Quiz || mongoose.model("Quiz", QuizSchema);
+if (mongoose.models.Quiz) {
+  delete mongoose.models.Quiz;
+}
+
+export default mongoose.model("Quiz", QuizSchema);

@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { socket } from "@/lib/socketClient";
+import { initSocketServer, socket } from "@/lib/socketClient";
 import { useRouter } from "next/navigation";
 
 interface Player {
@@ -202,7 +202,7 @@ export default function HostPage() {
 
   // SOCKET SETUP
   useEffect(() => {
-    fetch("/api/socket").catch(console.error);
+    initSocketServer().catch(console.error);
 
     if (!socket.connected) socket.connect();
 

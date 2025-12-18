@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { socket } from "@/lib/socketClient";
+import { initSocketServer, socket } from "@/lib/socketClient";
 
 interface Player {
   name: string;
@@ -151,7 +151,7 @@ export default function HostGamePage() {
 
   // SOCKET SETUP
   useEffect(() => {
-    fetch("/api/socket").catch(console.error);
+    initSocketServer().catch(console.error);
 
     if (!socket.connected) socket.connect();
 

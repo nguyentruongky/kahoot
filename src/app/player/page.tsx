@@ -1,5 +1,5 @@
 "use client";
-import { socket } from "@/lib/socketClient";
+import { initSocketServer, socket } from "@/lib/socketClient";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -73,8 +73,7 @@ export default function PlayerPage() {
   };
 
   useEffect(() => {
-    // Initialize socket server by calling the API endpoint
-    fetch("/api/socket").catch(console.error);
+    initSocketServer().catch(console.error);
 
     // Get player info from sessionStorage
     const storedPin = sessionStorage.getItem("gamePin");

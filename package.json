@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "start:custom": "node --enable-source-maps -r ts-node/register server/custom-server.ts",
     "lint": "eslint"
   },
   "dependencies": {
@@ -14,7 +15,8 @@
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "socket.io": "^4.8.1",
-    "socket.io-client": "^4.8.1"
+    "socket.io-client": "^4.8.1",
+    "ts-node": "^10.9.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

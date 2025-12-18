@@ -14,6 +14,29 @@ export const socket = io(socketUrl, {
   transports: ["websocket", "polling"],
 });
 
+let debugWired = false;
+function wireDebug() {
+  if (debugWired) return;
+  debugWired = true;
+  socket.on("connect_error", (err) => {
+    // eslint-disable-next-line no-console
+    console.error("❌ socket connect_error", err?.message ?? err, err);
+  });
+  socket.on("disconnect", (reason) => {
+    // eslint-disable-next-line no-console
+    console.warn("🔌 socket disconnected", reason);
+  });
+  socket.on("server_info", (info) => {
+    // eslint-disable-next-line no-console
+    console.log("🧭 socket server_info", info);
+  });
+  socket.on("debug_pong", (info) => {
+    // eslint-disable-next-line no-console
+    console.log("🏓 socket debug_pong", info);
+  });
+}
+wireDebug();
+
 export async function initSocketServer(): Promise<void> {
   if (socketUrl) return;
   try {

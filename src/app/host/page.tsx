@@ -2,7 +2,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { initSocketServer, socket } from "@/lib/socketClient";
 import { useRouter } from "next/navigation";
-import { kahootShapeForIndex, KahootShapeIcon } from "@/components/KahootShapeIcon";
+import {
+  kahootShapeForIndex,
+  KahootShapeIcon,
+} from "@/components/KahootShapeIcon";
 import { KahootCheckIcon } from "@/components/KahootCheckIcon";
 
 interface Player {
@@ -240,7 +243,9 @@ export default function HostPage() {
       setAnswers((prev) => [...prev, data]);
       setPlayers((prev) =>
         prev.map((p) =>
-          p.name === data.name ? { ...p, score: p.score + (data.points ?? 0) } : p
+          p.name === data.name
+            ? { ...p, score: p.score + (data.points ?? 0) }
+            : p
         )
       );
     };
@@ -453,7 +458,7 @@ export default function HostPage() {
     <div className="grid grid-cols-12 gap-8">
       <aside className="col-span-3 bg-white/5 rounded-2xl p-6 border border-white/10">
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center text-lg font-bold">
+          <div className="w-12 h-12 rounded-full bg-linear-to-br from-purple-400 to-indigo-500 flex items-center justify-center text-lg font-bold">
             H
           </div>
           <div>
@@ -496,7 +501,7 @@ export default function HostPage() {
               className="rounded-2xl p-4 border border-white/10 bg-white/5 hover:border-white/30 cursor-pointer transition"
               onClick={() => startEditingQuiz(quiz._id)} // CLICK = EDIT
             >
-              <div className="h-24 rounded-xl bg-gradient-to-br from-purple-400/30 to-indigo-500/30 mb-4" />
+              <div className="h-24 rounded-xl bg-linear-to-br from-purple-400/30 to-indigo-500/30 mb-4" />
 
               <h3 className="text-lg font-semibold mb-1">{quiz.title}</h3>
               <p className="text-sm text-white/60">
@@ -509,7 +514,7 @@ export default function HostPage() {
                     e.stopPropagation();
                     startGame(quiz._id);
                   }}
-                  className="text-sm px-3 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                  className="text-sm px-3 py-2 rounded-lg bg-linear-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
                 >
                   Play
                 </button>
@@ -648,13 +653,13 @@ export default function HostPage() {
                   key={idx}
                   className={`${
                     colors[idx % 4]
-	                  } text-white rounded-2xl p-4 shadow-lg`}
-	                >
-	                  <div className="flex items-center gap-3">
-	                    <KahootShapeIcon
-	                      kind={kahootShapeForIndex(idx)}
-	                      className="h-7 w-7 text-white"
-	                    />
+                  } text-white rounded-2xl p-4 shadow-lg`}
+                >
+                  <div className="flex items-center gap-3">
+                    <KahootShapeIcon
+                      kind={kahootShapeForIndex(idx)}
+                      className="h-7 w-7 text-white"
+                    />
 
                     <input
                       value={opt}
@@ -687,14 +692,14 @@ export default function HostPage() {
                           )
                         )
                       }
-	                      className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${
-	                        isCorrect
-	                          ? "bg-white text-green-600 border-white"
-	                          : "border-white/60 text-white/80"
-	                      }`}
-	                    >
-	                      <KahootCheckIcon className="h-4 w-4" />
-	                    </button>
+                      className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${
+                        isCorrect
+                          ? "bg-white text-green-600 border-white"
+                          : "border-white/60 text-white/80"
+                      }`}
+                    >
+                      <KahootCheckIcon className="h-4 w-4" />
+                    </button>
                   </div>
                 </div>
               );
@@ -707,7 +712,7 @@ export default function HostPage() {
 
   // LOBBY
   const renderLobby = () => (
-    <div className="min-h-[70vh] flex flex-col items-center justify-center bg-gradient-to-b from-[#120d25] to-[#0f0a1f] rounded-3xl border border-white/10">
+    <div className="min-h-[70vh] flex flex-col items-center justify-center bg-linear-to-b from-[#120d25] to-[#0f0a1f] rounded-3xl border border-white/10">
       <p className="text-purple-200 mb-2">Waiting for players…</p>
       <h2 className="text-4xl font-bold mb-2">{activeQuizTitle}</h2>
 
@@ -722,7 +727,7 @@ export default function HostPage() {
 
       <button
         onClick={nextQuestion}
-        className="px-10 py-4 rounded-2xl bg-gradient-to-r from-purple-500 to-pink-500 text-lg font-semibold shadow-lg hover:scale-[1.02] transition"
+        className="px-10 py-4 rounded-2xl bg-linear-to-r from-purple-500 to-pink-500 text-lg font-semibold shadow-lg hover:scale-[1.02] transition"
       >
         Start Game
       </button>
@@ -801,32 +806,32 @@ export default function HostPage() {
       </div>
 
       {/* ANSWER OPTIONS */}
-	      {!showResults ? (
-	        <div className="grid grid-cols-2 gap-4">
-	          {currentQuestion.options.map((opt: string, idx: number) => {
-	            const colors = [
-	              "bg-red-500",
-	              "bg-blue-500",
-	              "bg-yellow-500",
-	              "bg-green-500",
-	            ];
+      {!showResults ? (
+        <div className="grid grid-cols-2 gap-4">
+          {currentQuestion.options.map((opt: string, idx: number) => {
+            const colors = [
+              "bg-red-500",
+              "bg-blue-500",
+              "bg-yellow-500",
+              "bg-green-500",
+            ];
 
-	            return (
-	              <div
-	                key={idx}
-	                className={`${
-	                  colors[idx % 4]
-	                } text-white p-5 rounded-xl flex items-center gap-3 text-lg font-semibold`}
-	              >
-	                <KahootShapeIcon
-	                  kind={kahootShapeForIndex(idx)}
-	                  className="h-7 w-7 text-white"
-	                />
-	                {opt}
-	              </div>
-	            );
-	          })}
-	        </div>
+            return (
+              <div
+                key={idx}
+                className={`${
+                  colors[idx % 4]
+                } text-white p-5 rounded-xl flex items-center gap-3 text-lg font-semibold`}
+              >
+                <KahootShapeIcon
+                  kind={kahootShapeForIndex(idx)}
+                  className="h-7 w-7 text-white"
+                />
+                {opt}
+              </div>
+            );
+          })}
+        </div>
       ) : (
         <div className="space-y-4">
           {currentQuestion.options.map((opt: string, idx: number) => {
@@ -979,7 +984,7 @@ export default function HostPage() {
       {/* HEADER */}
       <header className="flex items-center justify-between px-8 py-4 border-b border-white/10 bg-black/30 backdrop-blur">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-xl font-bold">
+          <div className="w-10 h-10 rounded-xl bg-linear-to-br from-purple-500 to-pink-500 flex items-center justify-center text-xl font-bold">
             K
           </div>
           <div>
@@ -1002,7 +1007,7 @@ export default function HostPage() {
 
           <button
             onClick={createNewQuiz}
-            className="px-4 py-2 rounded-lg text-sm font-semibold bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+            className="px-4 py-2 rounded-lg text-sm font-semibold bg-linear-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
           >
             Create
           </button>

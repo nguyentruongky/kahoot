@@ -2,7 +2,10 @@
 import { initSocketServer, socket } from "@/lib/socketClient";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { kahootShapeForIndex, KahootShapeIcon } from "@/components/KahootShapeIcon";
+import {
+  kahootShapeForIndex,
+  KahootShapeIcon,
+} from "@/components/KahootShapeIcon";
 import { KahootCheckIcon } from "@/components/KahootCheckIcon";
 
 interface Question {
@@ -173,7 +176,9 @@ export default function PlayerPage() {
         score: typeof me?.score === "number" ? me.score : scoreRef.current,
         rank: typeof me?.rank === "number" ? me.rank : undefined,
         totalPlayers:
-          typeof data?.totalPlayers === "number" ? data.totalPlayers : undefined,
+          typeof data?.totalPlayers === "number"
+            ? data.totalPlayers
+            : undefined,
       });
       setResultPopup(null);
       setGameStatus("ended");
@@ -187,7 +192,12 @@ export default function PlayerPage() {
       correctAnswer: number;
       results?: Record<
         string,
-        { answer: number | null; correct: boolean; points: number; timeLeftSec: number }
+        {
+          answer: number | null;
+          correct: boolean;
+          points: number;
+          timeLeftSec: number;
+        }
       >;
     }) => {
       if (
@@ -226,7 +236,9 @@ export default function PlayerPage() {
       answerStreakRef.current = nextStreak;
       setAnswerStreak(nextStreak);
 
-      setFeedback(selected === null ? null : isCorrect ? "correct" : "incorrect");
+      setFeedback(
+        selected === null ? null : isCorrect ? "correct" : "incorrect"
+      );
       setResultPopup({
         open: true,
         title,
@@ -236,10 +248,7 @@ export default function PlayerPage() {
       });
     };
     socket.on("end_question", handleEndQuestion);
-    const handlePlayerAnswer = (data: {
-      name: string;
-      points?: number;
-    }) => {
+    const handlePlayerAnswer = (data: { name: string; points?: number }) => {
       if (data.name !== nameRef.current) return;
       // Keep this listener for compatibility, but points are shown on `end_question`.
     };
@@ -314,7 +323,7 @@ export default function PlayerPage() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-purple-900 p-4">
       {finalPopup?.open && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-gradient-to-b from-purple-950 to-black p-6">
+        <div className="fixed inset-0 z-60 flex items-center justify-center bg-linear-to-b from-purple-950 to-black p-6">
           <div className="w-full max-w-md rounded-3xl border border-white/10 bg-white/5 shadow-2xl overflow-hidden">
             <div className="p-8 text-center text-white">
               <p className="text-white/70 font-semibold">Final Results</p>
@@ -325,9 +334,7 @@ export default function PlayerPage() {
               <div className="mt-8 grid grid-cols-2 gap-4">
                 <div className="rounded-2xl bg-white/10 border border-white/10 p-5">
                   <p className="text-white/70 text-sm">Total score</p>
-                  <p className="mt-2 text-3xl font-black">
-                    {finalPopup.score}
-                  </p>
+                  <p className="mt-2 text-3xl font-black">{finalPopup.score}</p>
                 </div>
                 <div className="rounded-2xl bg-white/10 border border-white/10 p-5">
                   <p className="text-white/70 text-sm">Position</p>
@@ -361,8 +368,8 @@ export default function PlayerPage() {
             resultPopup.variant === "success"
               ? "bg-[#66bb2e]"
               : resultPopup.variant === "danger"
-                ? "bg-[#e53935]"
-                : "bg-[#f4b400]"
+              ? "bg-[#e53935]"
+              : "bg-[#f4b400]"
           }`}
         >
           <div className="w-full max-w-md px-6 py-10 text-center text-white">
@@ -372,11 +379,13 @@ export default function PlayerPage() {
 
             <div className="mt-6 flex items-center justify-center">
               <div className="text-7xl font-black drop-shadow-[0_3px_0_rgba(0,0,0,0.25)]">
-                {resultPopup.variant === "success"
-                  ? <KahootCheckIcon className="h-20 w-20 text-white" />
-                  : resultPopup.variant === "danger"
-                    ? "✕"
-                    : "⏱"}
+                {resultPopup.variant === "success" ? (
+                  <KahootCheckIcon className="h-20 w-20 text-white" />
+                ) : resultPopup.variant === "danger" ? (
+                  "✕"
+                ) : (
+                  "⏱"
+                )}
               </div>
             </div>
 
@@ -397,8 +406,8 @@ export default function PlayerPage() {
               {resultPopup.variant === "success"
                 ? "You're on the podium!"
                 : resultPopup.variant === "danger"
-                  ? "Try again next time!"
-                  : "Waiting for next question…"}
+                ? "Try again next time!"
+                : "Waiting for next question…"}
             </p>
 
             <p className="mt-3 text-white/90 font-semibold">
@@ -478,9 +487,7 @@ export default function PlayerPage() {
           {/* Feedback */}
           {answered && !answersRevealed && (
             <div
-              className={`mt-6 p-4 rounded-lg text-center text-white font-bold text-xl ${
-                "bg-gray-700"
-              }`}
+              className={`mt-6 p-4 rounded-lg text-center text-white font-bold text-xl ${"bg-gray-700"}`}
             >
               {(() => {
                 if (!answersRevealed) {

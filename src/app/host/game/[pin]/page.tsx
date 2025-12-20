@@ -38,112 +38,8 @@ type EndQuestionPayload = {
   >;
 };
 
-const FINAL_CONFETTI: Array<{
-  key: string;
-  className: string;
-  style: React.CSSProperties;
-}> = [
-  {
-    key: "c1",
-    className: "h-3 w-3 rounded-sm bg-rose-400/80",
-    style: { left: "6%", top: "10%", transform: "rotate(12deg)" },
-  },
-  {
-    key: "c2",
-    className: "h-2.5 w-6 rounded-sm bg-amber-300/80",
-    style: { left: "14%", top: "22%", transform: "rotate(-18deg)" },
-  },
-  {
-    key: "c3",
-    className: "h-4 w-4 rounded-full bg-sky-300/70",
-    style: { left: "22%", top: "14%" },
-  },
-  {
-    key: "c4",
-    className: "h-3 w-3 rounded-sm bg-emerald-300/75",
-    style: { left: "30%", top: "28%", transform: "rotate(30deg)" },
-  },
-  {
-    key: "c5",
-    className: "h-3 w-8 rounded-sm bg-violet-300/70",
-    style: { left: "38%", top: "12%", transform: "rotate(-10deg)" },
-  },
-  {
-    key: "c6",
-    className: "h-4 w-4 rounded-full bg-fuchsia-300/70",
-    style: { left: "46%", top: "20%" },
-  },
-  {
-    key: "c7",
-    className: "h-3 w-3 rounded-sm bg-red-300/70",
-    style: { left: "55%", top: "8%", transform: "rotate(8deg)" },
-  },
-  {
-    key: "c8",
-    className: "h-2.5 w-7 rounded-sm bg-yellow-300/75",
-    style: { left: "63%", top: "18%", transform: "rotate(20deg)" },
-  },
-  {
-    key: "c9",
-    className: "h-4 w-4 rounded-full bg-lime-300/70",
-    style: { left: "72%", top: "12%" },
-  },
-  {
-    key: "c10",
-    className: "h-3 w-3 rounded-sm bg-blue-300/70",
-    style: { left: "80%", top: "24%", transform: "rotate(-25deg)" },
-  },
-  {
-    key: "c11",
-    className: "h-3 w-6 rounded-sm bg-orange-300/70",
-    style: { left: "88%", top: "14%", transform: "rotate(16deg)" },
-  },
-  {
-    key: "c12",
-    className: "h-4 w-4 rounded-full bg-teal-300/65",
-    style: { left: "93%", top: "28%" },
-  },
-  {
-    key: "c13",
-    className: "h-3 w-3 rounded-sm bg-rose-400/70",
-    style: { left: "10%", top: "60%", transform: "rotate(28deg)" },
-  },
-  {
-    key: "c14",
-    className: "h-4 w-4 rounded-full bg-amber-300/70",
-    style: { left: "18%", top: "72%" },
-  },
-  {
-    key: "c15",
-    className: "h-3 w-7 rounded-sm bg-sky-300/70",
-    style: { left: "28%", top: "64%", transform: "rotate(-14deg)" },
-  },
-  {
-    key: "c16",
-    className: "h-3 w-3 rounded-sm bg-emerald-300/70",
-    style: { left: "40%", top: "74%", transform: "rotate(10deg)" },
-  },
-  {
-    key: "c17",
-    className: "h-4 w-4 rounded-full bg-fuchsia-300/65",
-    style: { left: "50%", top: "66%" },
-  },
-  {
-    key: "c18",
-    className: "h-3 w-8 rounded-sm bg-violet-300/65",
-    style: { left: "62%", top: "72%", transform: "rotate(22deg)" },
-  },
-  {
-    key: "c19",
-    className: "h-3 w-3 rounded-sm bg-lime-300/70",
-    style: { left: "74%", top: "64%", transform: "rotate(-18deg)" },
-  },
-  {
-    key: "c20",
-    className: "h-4 w-4 rounded-full bg-blue-300/65",
-    style: { left: "86%", top: "72%" },
-  },
-];
+const WINTER_BG_CLASS =
+  "bg-[url('/backgrounds/winter-game.svg')] bg-cover bg-center bg-no-repeat";
 
 export default function HostGamePage() {
   const router = useRouter();
@@ -166,7 +62,6 @@ export default function HostGamePage() {
   const [answers, setAnswers] = useState<PlayerAnswerPayload[]>([]);
   const [timer, setTimer] = useState(20);
   const [durationSec, setDurationSec] = useState(20);
-  const [finalResults, setFinalResults] = useState<Player[]>([]);
   const [stage, setStage] = useState<"lobby" | "question" | "final">("lobby");
   const [postQuestionScreen, setPostQuestionScreen] = useState<
     "results" | "scoreboard"
@@ -230,30 +125,40 @@ export default function HostGamePage() {
 
   const avatarForName = (name: string) => {
     const avatars = [
-      "😀",
-      "😎",
+      "🐶",
+      "🐱",
+      "🐭",
+      "🐹",
+      "🐰",
       "🦊",
       "🐻",
-      "🐱",
-      "🐶",
+      "🐼",
+      "🐻‍❄️",
+      "🐨",
       "🐯",
       "🦁",
-      "🐼",
+      "🐮",
+      "🐷",
       "🐸",
+      "🐵",
+      "🐔",
       "🐧",
-      "🐨",
+      "🐦",
+      "🦉",
+      "🦄",
+      "🐝",
+      "🦋",
+      "🐢",
+      "🦖",
+      "🐙",
+      "🦀",
+      "🐬",
+      "🦈",
+      "🦦",
+      "🦔",
     ];
     const hash = name.split("").reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
     return avatars[hash % avatars.length];
-  };
-
-  const initialsForName = (name: string) => {
-    const parts = name.trim().split(/\s+/).filter(Boolean);
-    if (parts.length === 0) return "??";
-    const first = parts[0]?.[0] ?? "";
-    const last = parts.length > 1 ? parts[parts.length - 1]?.[0] ?? "" : "";
-    const result = `${first}${last}`.toUpperCase();
-    return result || "??";
   };
 
   useEffect(() => {
@@ -484,8 +389,6 @@ export default function HostGamePage() {
 
   const finalizeGame = () => {
     socket.emit("end_game", { pin });
-    const leaderboard = [...players].sort((a, b) => b.score - a.score);
-    setFinalResults(leaderboard.slice(0, 3));
     setStage("final");
     setCurrentQuestion(null);
     setTimer(0);
@@ -531,6 +434,57 @@ export default function HostGamePage() {
     return `/join?pin=${encodeURIComponent(pin)}`;
   }, [joinUrl, pin]);
 
+  const lobbyPlayerChipLayout = useMemo(() => {
+    const count = players.length;
+
+    if (count <= 8) {
+      return {
+        wrapClass: "gap-4",
+        chipClass: "gap-4 bg-white/14 px-7 py-4 ring-white/20 backdrop-blur-sm",
+        emojiClass: "text-[75px] leading-none",
+        nameClass: "max-w-72 truncate text-2xl font-extrabold tracking-tight",
+        moreClass:
+          "bg-white/14 px-7 py-4 text-2xl font-extrabold ring-white/20 backdrop-blur-sm",
+        maxShown: 18,
+      };
+    }
+
+    if (count <= 16) {
+      return {
+        wrapClass: "gap-3",
+        chipClass: "gap-3 bg-white/12 px-6 py-3 ring-white/18 backdrop-blur-sm",
+        emojiClass: "text-[60px] leading-none",
+        nameClass: "max-w-60 truncate text-xl font-extrabold tracking-tight",
+        moreClass:
+          "bg-white/12 px-6 py-3 text-xl font-extrabold ring-white/18 backdrop-blur-sm",
+        maxShown: 24,
+      };
+    }
+
+    if (count <= 28) {
+      return {
+        wrapClass: "gap-2.5",
+        chipClass:
+          "gap-3 bg-white/12 px-5 py-2.5 ring-white/16 backdrop-blur-sm",
+        emojiClass: "text-[40px] leading-none",
+        nameClass: "max-w-48 truncate text-lg font-bold tracking-tight",
+        moreClass:
+          "bg-white/12 px-5 py-2.5 text-lg font-bold ring-white/16 backdrop-blur-sm",
+        maxShown: 30,
+      };
+    }
+
+    return {
+      wrapClass: "gap-2",
+      chipClass: "gap-2 bg-white/10 px-4 py-2 ring-white/14 backdrop-blur-sm",
+      emojiClass: "text-[30px] leading-none",
+      nameClass: "max-w-40 truncate text-base font-bold tracking-tight",
+      moreClass:
+        "bg-white/10 px-4 py-2 text-base font-bold ring-white/14 backdrop-blur-sm",
+      maxShown: 36,
+    };
+  }, [players.length]);
+
   const copyJoinLink = async () => {
     const ok = await copyToClipboard(joinDisplayUrl);
     if (!ok) return;
@@ -544,12 +498,10 @@ export default function HostGamePage() {
   };
 
   const renderLobby = () => (
-    <div className="relative min-h-screen overflow-hidden bg-[#2a0b5c] text-white">
-      <div className="absolute inset-0 opacity-70">
-        <div className="absolute -left-48 -top-48 h-[520px] w-[520px] rounded-full bg-purple-700/40 blur-3xl" />
-        <div className="absolute -right-56 top-24 h-[560px] w-[560px] rounded-full bg-fuchsia-600/25 blur-3xl" />
-        <div className="absolute left-1/3 -bottom-72 h-[680px] w-[680px] rounded-full bg-indigo-500/25 blur-3xl" />
-      </div>
+    <div
+      className={`relative min-h-screen overflow-hidden text-white ${WINTER_BG_CLASS}`}
+    >
+      <div className="absolute inset-0 bg-black/10" />
 
       <div className="relative z-10 flex min-h-screen flex-col">
         <div className="flex items-stretch gap-5 border-b border-white/10 bg-black/20 px-6 py-5 backdrop-blur">
@@ -703,22 +655,28 @@ export default function HostGamePage() {
             </div>
 
             {players.length > 0 && (
-              <div className="mt-10 flex max-w-4xl flex-wrap justify-center gap-3 px-6">
-                {players.slice(0, 18).map((p) => (
+              <div
+                className={`mt-10 flex max-w-5xl flex-wrap justify-center px-6 ${lobbyPlayerChipLayout.wrapClass}`}
+              >
+                {players.slice(0, lobbyPlayerChipLayout.maxShown).map((p) => (
                   <div
                     key={p.name}
-                    className="flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-white ring-1 ring-white/15"
+                    className={`flex items-center rounded-full text-white ring-1 ${lobbyPlayerChipLayout.chipClass}`}
                     title={p.name}
                   >
-                    <span className="text-xl">{avatarForName(p.name)}</span>
-                    <span className="max-w-48 truncate font-semibold">
+                    <span className={lobbyPlayerChipLayout.emojiClass}>
+                      {avatarForName(p.name)}
+                    </span>
+                    <span className={lobbyPlayerChipLayout.nameClass}>
                       {p.name}
                     </span>
                   </div>
                 ))}
-                {players.length > 18 && (
-                  <div className="rounded-full bg-white/10 px-4 py-2 text-white/90 ring-1 ring-white/15">
-                    +{players.length - 18} more
+                {players.length > lobbyPlayerChipLayout.maxShown && (
+                  <div
+                    className={`rounded-full text-white/90 ring-1 ${lobbyPlayerChipLayout.moreClass}`}
+                  >
+                    +{players.length - lobbyPlayerChipLayout.maxShown} more
                   </div>
                 )}
               </div>
@@ -734,331 +692,322 @@ export default function HostGamePage() {
   );
 
   const renderQuestion = () => (
-    <>
+    <div
+      className={`relative min-h-screen overflow-hidden text-white ${WINTER_BG_CLASS}`}
+    >
+      <div className="absolute inset-0 bg-black/10" />
+
       {showResults ? (
-        <div className="relative h-screen overflow-hidden bg-linear-to-br from-[#2a0b5c] via-[#1b0b2e] to-[#0b1b4a] text-white">
-          <div className="absolute inset-0 opacity-75">
-            <div className="absolute -left-48 -top-48 h-[620px] w-[620px] rounded-full bg-purple-700/35 blur-3xl" />
-            <div className="absolute -right-56 top-24 h-[680px] w-[680px] rounded-full bg-fuchsia-600/25 blur-3xl" />
-            <div className="absolute left-1/3 -bottom-72 h-[760px] w-[760px] rounded-full bg-indigo-500/25 blur-3xl" />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_10%,rgba(255,255,255,0.10),rgba(255,255,255,0)_55%)]" />
-          </div>
-
-          <div className="relative z-10 flex h-full overflow-hidden flex-col px-6 pt-6 pb-16">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1 flex justify-center">
-                <div className="max-w-5xl w-full rounded-xl bg-white px-8 py-5 shadow-2xl ring-1 ring-black/10">
-                  <h2 className="text-center text-4xl font-extrabold tracking-tight text-gray-900">
-                    {postQuestionScreen === "scoreboard"
-                      ? "Scoreboard"
-                      : currentQuestion?.text}
-                  </h2>
-                </div>
-              </div>
-
-              <div className="shrink-0 flex items-center">
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (postQuestionScreen === "results") {
-                      setPostQuestionScreen("scoreboard");
-                      return;
-                    }
-                    nextQuestion();
-                  }}
-                  className="rounded-lg bg-white px-5 py-3 text-lg font-bold text-gray-900 shadow ring-1 ring-black/10 hover:bg-white/90"
-                >
-                  Next
-                </button>
+        <div className="relative z-10 flex min-h-screen overflow-hidden flex-col px-6 pt-6 pb-16">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1 flex justify-center">
+              <div className="max-w-5xl w-full rounded-xl bg-white px-8 py-5 shadow-2xl ring-1 ring-black/10">
+                <h2 className="text-center text-4xl font-extrabold tracking-tight text-gray-900">
+                  {postQuestionScreen === "scoreboard"
+                    ? "Scoreboard"
+                    : currentQuestion?.text}
+                </h2>
               </div>
             </div>
 
-            {(() => {
-              if (postQuestionScreen === "scoreboard") {
-                const leaderboard = players
-                  .slice()
-                  .sort((a, b) => b.score - a.score);
-                const topPlayers = leaderboard.slice(0, 10);
-                const minRows = 3;
-                const rows: Array<
-                  | Player
-                  | { __placeholder: true; __key: string; name: string; score: 0 }
-                > = Array.from(
-                  { length: Math.max(minRows, topPlayers.length) },
-                  (_, idx) =>
-                    topPlayers[idx] ?? {
-                      __placeholder: true,
-                      __key: `placeholder-${idx}`,
-                      name: "Waiting for players…",
-                      score: 0 as const,
-                    }
-                );
-
-                return (
-                  <div className="flex flex-1 items-center justify-center">
-                    <div className="w-full max-w-5xl px-2">
-                      <div className="mt-12 space-y-0">
-                        {rows.map((p, idx) => (
-                          <div
-                            key={"__placeholder" in p ? p.__key : p.name}
-                            className={`h-20 rounded-xl shadow-2xl flex items-center justify-between px-6 ring-1 ring-black/10 ${
-                              "__placeholder" in p
-                                ? "bg-white/80 text-gray-400"
-                                : "bg-white"
-                            }`}
-                          >
-                            <div className="flex items-center gap-5">
-                              <div className="h-12 w-12 rounded-lg bg-gray-100 ring-1 ring-black/5 flex items-center justify-center text-2xl">
-                                {"__placeholder" in p
-                                  ? "👤"
-                                  : avatarForName(p.name)}
-                              </div>
-                              <div
-                                className={`text-3xl font-extrabold tracking-tight ${
-                                  "__placeholder" in p
-                                    ? "text-gray-500"
-                                    : "text-gray-900"
-                                }`}
-                              >
-                                {p.name}
-                              </div>
-                            </div>
-                            <div
-                              className={`text-4xl font-black tabular-nums ${
-                                "__placeholder" in p
-                                  ? "text-gray-400"
-                                  : "text-gray-900"
-                              }`}
-                            >
-                              {"__placeholder" in p ? "—" : p.score}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                );
-              }
-
-              const options = (currentQuestion?.options ?? []).slice(0, 4);
-              const counts = options.map(
-                (_, idx) => answers.filter((a) => a.answer === idx).length
-              );
-              const maxCount = Math.max(1, ...counts);
-              const meta = [
-                {
-                  bg: "bg-red-600/85",
-                  bar: "bg-red-500",
-                  tile: "bg-red-600",
-                  chip: "bg-red-600/90",
-                  shape: kahootShapeForIndex(0),
-                },
-                {
-                  bg: "bg-blue-600/85",
-                  bar: "bg-blue-500",
-                  tile: "bg-blue-600",
-                  chip: "bg-blue-600/90",
-                  shape: kahootShapeForIndex(1),
-                },
-                {
-                  bg: "bg-yellow-600/85",
-                  bar: "bg-yellow-500",
-                  tile: "bg-yellow-600",
-                  chip: "bg-yellow-600/90",
-                  shape: kahootShapeForIndex(2),
-                },
-                {
-                  bg: "bg-green-700/85",
-                  bar: "bg-green-500",
-                  tile: "bg-green-700",
-                  chip: "bg-green-700/90",
-                  shape: kahootShapeForIndex(3),
-                },
-              ] as const;
-
-              return (
-                <>
-                  <div className="flex flex-1 min-h-0 items-end justify-center pt-24 pb-2">
-                    <div className="w-full max-w-6xl">
-                      <div className="relative h-[52vh] min-h-[380px] max-h-[520px]">
-                        <div className="absolute inset-0 grid h-full grid-cols-[repeat(4,112px)] justify-center gap-3 px-4 items-stretch">
-                          {counts.map((count, idx) => {
-                            const heightPct = (count / maxCount) * 100;
-                            const barHeight =
-                              count === 0 ? 0 : Math.max(18, heightPct);
-                            const isCorrect =
-                              idx === currentQuestion?.correctAnswer;
-
-                            return (
-                              <div
-                                key={idx}
-                                className="flex h-full items-end justify-center"
-                              >
-                                <div className="flex h-full w-[112px] flex-col items-center justify-end rounded-xl overflow-hidden">
-                                  <div className="relative w-[112px] flex-1">
-                                    <div className="absolute inset-x-0 bottom-0 h-0.5 bg-black/30" />
-                                    <div
-                                      className={`absolute inset-x-0 bottom-0  shadow-2xl ring-1 ring-black/25 ${meta[idx].bar}`}
-                                      style={{ height: `${barHeight}%` }}
-                                      title={`${count} answers`}
-                                    />
-                                  </div>
-                                  <div
-                                    className={`h-14 w-full shadow-2xl ring-1 ring-black/25 flex items-center px-4 text-white ${meta[idx].chip}`}
-                                  >
-                                    <KahootShapeIcon
-                                      kind={meta[idx].shape}
-                                      className="h-7 w-7 shrink-0 text-white"
-                                    />
-                                    <span className="ml-3 text-4xl font-black tabular-nums">
-                                      {count}
-                                    </span>
-                                    {isCorrect && (
-                                      <span className="ml-auto">
-                                        <KahootCheckIcon className="h-7 w-7 shrink-0 text-white/95" />
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-8 grid grid-cols-2 gap-0 overflow-hidden rounded-xl ring-1 ring-white/10 shadow-2xl flex-none">
-                    {options.map((opt, idx) => {
-                      const isCorrect = idx === currentQuestion?.correctAnswer;
-                      return (
-                        <div
-                          key={idx}
-                          className={`relative h-[120px] ${meta[idx].tile}`}
-                        >
-                          <div className="relative h-full flex items-center justify-between px-8">
-                            <div className="flex items-center gap-5">
-                              <KahootShapeIcon
-                                kind={meta[idx].shape}
-                                className="h-10 w-10 text-white"
-                              />
-                              <div className="text-3xl font-extrabold tracking-tight text-white/90">
-                                {opt}
-                              </div>
-                            </div>
-                            <div className="text-4xl font-black text-white/70">
-                              {isCorrect ? (
-                                <KahootCheckIcon className="h-10 w-10 text-white/85" />
-                              ) : (
-                                "✕"
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </>
-              );
-            })()}
-
-            <div className="absolute bottom-0 left-0 right-0">
-              <div className="h-14 bg-linear-to-r from-purple-950/60 via-indigo-950/60 to-fuchsia-950/60 backdrop-blur ring-1 ring-white/10 px-6 flex items-center justify-between text-white/90">
-                <div className="font-semibold tabular-nums">
-                  {Math.max(1, questionIndex - 1)}/
-                  {Math.max(1, questionSet.length)}
-                </div>
-                <div className="font-semibold">
-                  <span className="opacity-90">kahoot.it</span>
-                  <span className="mx-3 opacity-60">•</span>
-                  <span className="opacity-90">Game PIN:</span>{" "}
-                  <span className="font-extrabold tracking-wide">{pin}</span>
-                </div>
-                <div className="w-20" />
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="bg-white text-gray-900 rounded-3xl shadow-2xl p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <span className="text-purple-600 font-semibold">
-                Game PIN: {pin}
-              </span>
-              <span className="text-gray-400">|</span>
-              <span className="text-gray-700">Players: {players.length}</span>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <span className="text-gray-700">
-                {answers.length} / {players.length} answers
-              </span>
-
+            <div className="shrink-0 flex items-center">
               <button
-                onClick={finalizeGame}
-                className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200"
+                type="button"
+                onClick={() => {
+                  if (postQuestionScreen === "results") {
+                    setPostQuestionScreen("scoreboard");
+                    return;
+                  }
+                  nextQuestion();
+                }}
+                className="rounded-lg bg-white px-5 py-3 text-lg font-bold text-gray-900 shadow ring-1 ring-black/10 hover:bg-white/90"
               >
-                Quit Game
+                Next
               </button>
             </div>
           </div>
 
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-sm text-gray-500">
-              Question {questionIndex - 1} of {questionSet.length}
-            </p>
-            <div className="w-12 h-12 rounded-full border-4 border-purple-200 flex items-center justify-center text-purple-700 font-bold">
-              {effectiveTimer}
-            </div>
-          </div>
-
-          <div className="w-full bg-gray-200 h-2 rounded-full mb-6">
-            <div
-              className="h-2 rounded-full bg-purple-500 transition-all duration-1000"
-              style={{
-                width: `${(effectiveTimer / Math.max(1, durationSec)) * 100}%`,
-              }}
-            />
-          </div>
-
-          <div className="bg-gray-100 rounded-2xl p-6 mb-6">
-            <h3 className="text-2xl font-bold text-center">
-              {currentQuestion?.text}
-            </h3>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            {(currentQuestion?.options ?? []).map((opt, idx) => {
-              const colors = [
-                "bg-red-500",
-                "bg-blue-500",
-                "bg-yellow-500",
-                "bg-green-500",
-              ];
+          {(() => {
+            if (postQuestionScreen === "scoreboard") {
+              const leaderboard = players
+                .slice()
+                .sort((a, b) => b.score - a.score);
+              const topPlayers = leaderboard.slice(0, 10);
+              const minRows = 3;
+              const rows: Array<
+                | Player
+                | { __placeholder: true; __key: string; name: string; score: 0 }
+              > = Array.from(
+                { length: Math.max(minRows, topPlayers.length) },
+                (_, idx) =>
+                  topPlayers[idx] ?? {
+                    __placeholder: true,
+                    __key: `placeholder-${idx}`,
+                    name: "Waiting for players…",
+                    score: 0 as const,
+                  }
+              );
 
               return (
-                <div
-                  key={idx}
-                  className={`${
-                    colors[idx % 4]
-                  } text-white p-5 rounded-xl flex items-center gap-3 text-lg font-semibold`}
-                >
-                  <KahootShapeIcon
-                    kind={kahootShapeForIndex(idx)}
-                    className="h-7 w-7 text-white"
-                  />
-                  {opt}
+                <div className="flex flex-1 items-center justify-center px-6 py-10">
+                  <div className="w-full max-w-5xl">
+                    <div className="mt-12 space-y-3">
+                      {rows.map((p, idx) => (
+                        <div
+                          key={"__placeholder" in p ? p.__key : p.name}
+                          className={`h-20 rounded-xl shadow-2xl flex items-center justify-between px-6 ring-1 ring-black/10 ${
+                            "__placeholder" in p
+                              ? "bg-white/80 text-gray-400"
+                              : "bg-white"
+                          }`}
+                        >
+                          <div className="flex items-center gap-5">
+                            <div className="h-12 w-12 rounded-lg bg-gray-100 ring-1 ring-black/5 flex items-center justify-center text-2xl">
+                              {"__placeholder" in p
+                                ? "👤"
+                                : avatarForName(p.name)}
+                            </div>
+                            <div
+                              className={`text-3xl font-extrabold tracking-tight ${
+                                "__placeholder" in p
+                                  ? "text-gray-500"
+                                  : "text-gray-900"
+                              }`}
+                            >
+                              {p.name}
+                            </div>
+                          </div>
+                          <div
+                            className={`text-4xl font-black tabular-nums ${
+                              "__placeholder" in p
+                                ? "text-gray-400"
+                                : "text-gray-900"
+                            }`}
+                          >
+                            {"__placeholder" in p ? "—" : p.score}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               );
-            })}
+            }
+
+            const options = (currentQuestion?.options ?? []).slice(0, 4);
+            const counts = options.map(
+              (_, idx) => answers.filter((a) => a.answer === idx).length
+            );
+            const maxCount = Math.max(1, ...counts);
+            const meta = [
+              {
+                bg: "bg-red-600/85",
+                bar: "bg-red-500",
+                tile: "bg-red-600",
+                chip: "bg-red-600/90",
+                shape: kahootShapeForIndex(0),
+              },
+              {
+                bg: "bg-blue-600/85",
+                bar: "bg-blue-500",
+                tile: "bg-blue-600",
+                chip: "bg-blue-600/90",
+                shape: kahootShapeForIndex(1),
+              },
+              {
+                bg: "bg-yellow-600/85",
+                bar: "bg-yellow-500",
+                tile: "bg-yellow-600",
+                chip: "bg-yellow-600/90",
+                shape: kahootShapeForIndex(2),
+              },
+              {
+                bg: "bg-green-700/85",
+                bar: "bg-green-500",
+                tile: "bg-green-700",
+                chip: "bg-green-700/90",
+                shape: kahootShapeForIndex(3),
+              },
+            ] as const;
+
+            return (
+              <>
+                <div className="flex flex-1 min-h-0 items-end justify-center pt-24 pb-2">
+                  <div className="w-full max-w-6xl">
+                    <div className="relative h-[52vh] min-h-[380px] max-h-[520px]">
+                      <div className="absolute inset-0 grid h-full grid-cols-[repeat(4,112px)] justify-center gap-3 px-4 items-stretch">
+                        {counts.map((count, idx) => {
+                          const heightPct = (count / maxCount) * 100;
+                          const barHeight =
+                            count === 0 ? 0 : Math.max(18, heightPct);
+                          const isCorrect =
+                            idx === currentQuestion?.correctAnswer;
+
+                          return (
+                            <div
+                              key={idx}
+                              className="flex h-full items-end justify-center"
+                            >
+                              <div className="flex h-full w-28 flex-col items-center justify-end rounded-xl overflow-hidden">
+                                <div className="relative w-28 flex-1">
+                                  <div className="absolute inset-x-0 bottom-0 h-0.5 bg-black/30" />
+                                  <div
+                                    className={`absolute inset-x-0 bottom-0  shadow-2xl ring-1 ring-black/25 ${meta[idx].bar}`}
+                                    style={{ height: `${barHeight}%` }}
+                                    title={`${count} answers`}
+                                  />
+                                </div>
+                                <div
+                                  className={`h-14 w-full shadow-2xl ring-1 ring-black/25 flex items-center px-4 text-white ${meta[idx].chip}`}
+                                >
+                                  <KahootShapeIcon
+                                    kind={meta[idx].shape}
+                                    className="h-7 w-7 shrink-0 text-white"
+                                  />
+                                  <span className="ml-3 text-4xl font-black tabular-nums">
+                                    {count}
+                                  </span>
+                                  {isCorrect && (
+                                    <span className="ml-auto">
+                                      <KahootCheckIcon className="h-7 w-7 shrink-0 text-white/95" />
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-8 grid grid-cols-2 gap-0 overflow-hidden rounded-xl ring-1 ring-white/10 shadow-2xl flex-none">
+                  {options.map((opt, idx) => {
+                    const isCorrect = idx === currentQuestion?.correctAnswer;
+                    return (
+                      <div
+                        key={idx}
+                        className={`relative h-[120px] ${meta[idx].tile}`}
+                      >
+                        <div className="relative h-full flex items-center justify-between px-8">
+                          <div className="flex items-center gap-5">
+                            <KahootShapeIcon
+                              kind={meta[idx].shape}
+                              className="h-10 w-10 text-white"
+                            />
+                            <div className="text-3xl font-extrabold tracking-tight text-white/90">
+                              {opt}
+                            </div>
+                          </div>
+                          <div className="text-4xl font-black text-white/70">
+                            {isCorrect ? (
+                              <KahootCheckIcon className="h-10 w-10 text-white/85" />
+                            ) : (
+                              "✕"
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            );
+          })()}
+
+          <div className="absolute bottom-0 left-0 right-0">
+            <div className="h-14 bg-linear-to-r from-purple-950/60 via-indigo-950/60 to-fuchsia-950/60 backdrop-blur ring-1 ring-white/10 px-6 flex items-center justify-between text-white/90">
+              <div className="font-semibold tabular-nums">
+                {Math.max(1, questionIndex - 1)}/
+                {Math.max(1, questionSet.length)}
+              </div>
+              <div className="font-semibold">
+                <span className="opacity-90">kahoot.it</span>
+                <span className="mx-3 opacity-60">•</span>
+                <span className="opacity-90">Game PIN:</span>{" "}
+                <span className="font-extrabold tracking-wide">{pin}</span>
+              </div>
+              <div className="w-20" />
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="relative z-10 flex min-h-screen items-center justify-center px-6 py-14">
+          <div className="w-full max-w-6xl">
+            <div className="relative rounded-3xl bg-white/92 p-10 text-gray-900 shadow-2xl ring-1 ring-black/10 backdrop-blur">
+              <button
+                onClick={finalizeGame}
+                className="absolute right-7 top-7 rounded-xl bg-gray-100 px-5 py-3 text-base font-semibold text-gray-700 hover:bg-gray-200"
+              >
+                Quit Game
+              </button>
+
+              <div className="flex flex-col items-center gap-6">
+                <p className="text-base font-semibold text-gray-500">
+                  Question {questionIndex - 1} of {questionSet.length}
+                </p>
+
+                <div className="flex flex-col items-center gap-3">
+                  <div className="h-20 w-20 rounded-full border-4 border-purple-200 flex items-center justify-center text-purple-700 font-black text-3xl tabular-nums">
+                    {effectiveTimer}
+                  </div>
+                  <div className="text-base font-semibold text-gray-600">
+                    {answers.length} / {players.length} answered
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-8 w-full bg-gray-200 h-3 rounded-full">
+                <div
+                  className="h-3 rounded-full bg-purple-500 transition-all duration-1000"
+                  style={{
+                    width: `${
+                      (effectiveTimer / Math.max(1, durationSec)) * 100
+                    }%`,
+                  }}
+                />
+              </div>
+
+              <div className="mt-9 rounded-2xl bg-gray-100 px-10 py-9">
+                <h3 className="text-center text-4xl font-extrabold tracking-tight">
+                  {currentQuestion?.text}
+                </h3>
+              </div>
+
+              <div className="mt-9 grid grid-cols-2 gap-5">
+                {(currentQuestion?.options ?? []).map((opt, idx) => {
+                  const colors = [
+                    "bg-red-500",
+                    "bg-blue-500",
+                    "bg-yellow-500",
+                    "bg-green-500",
+                  ];
+
+                  return (
+                    <div
+                      key={idx}
+                      className={`${
+                        colors[idx % 4]
+                      } text-white p-7 rounded-2xl flex items-center gap-4 text-2xl font-extrabold min-h-[92px]`}
+                    >
+                      <KahootShapeIcon
+                        kind={kahootShapeForIndex(idx)}
+                        className="h-9 w-9 text-white"
+                      />
+                      {opt}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 
-  const renderFinal = () => (
+  const renderFinal = () =>
     (() => {
       const leaderboard = players.slice().sort((a, b) => b.score - a.score);
       const top = leaderboard.slice(0, 3);
@@ -1070,90 +1019,78 @@ export default function HostGamePage() {
           }
         );
       });
-      const runnersUp = leaderboard.slice(3, 5);
 
       const medal = [
         {
           label: "1",
           medal: "bg-linear-to-br from-yellow-300 to-amber-500",
           ring: "ring-yellow-200/60",
-          cardHeight: "h-[360px]",
+          cardHeight: "h-[460px]",
           cardTop: "mt-0",
         },
         {
           label: "2",
           medal: "bg-linear-to-br from-slate-200 to-slate-400",
           ring: "ring-white/25",
-          cardHeight: "h-[310px]",
-          cardTop: "mt-10",
+          cardHeight: "h-[420px]",
+          cardTop: "mt-12",
         },
         {
           label: "3",
           medal: "bg-linear-to-br from-amber-300 to-orange-500",
           ring: "ring-amber-200/50",
-          cardHeight: "h-[290px]",
-          cardTop: "mt-14",
+          cardHeight: "h-[400px]",
+          cardTop: "mt-16",
         },
       ] as const;
 
       const order = [1, 0, 2] as const; // 2nd, 1st, 3rd
 
       return (
-        <div className="relative min-h-[calc(100vh-73px)] overflow-hidden bg-[#46178f] text-white">
-          <div className="absolute inset-0 opacity-70">
-            <div className="absolute -left-48 -top-48 h-[720px] w-[720px] rounded-full bg-fuchsia-500/20 blur-3xl" />
-            <div className="absolute -right-56 top-16 h-[760px] w-[760px] rounded-full bg-indigo-500/18 blur-3xl" />
-            <div className="absolute left-1/3 -bottom-72 h-[820px] w-[820px] rounded-full bg-violet-500/18 blur-3xl" />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_10%,rgba(255,255,255,0.10),rgba(255,255,255,0)_56%)]" />
-          </div>
+        <div
+          className={`relative min-h-screen overflow-hidden text-white ${WINTER_BG_CLASS}`}
+        >
+          <div className="absolute inset-0 bg-black/10" />
 
-          <div className="pointer-events-none absolute inset-0">
-            {FINAL_CONFETTI.map((piece) => (
-              <span
-                key={piece.key}
-                className={`absolute ${piece.className}`}
-                style={piece.style}
-              />
-            ))}
-          </div>
+          <div className="relative z-10 mx-auto flex min-h-screen max-w-6xl flex-col px-6 py-8">
+            <button
+              onClick={() => router.push("/host")}
+              className="absolute right-6 top-6 rounded-full bg-black/35 px-4 py-3 text-sm font-semibold text-white/90 ring-1 ring-white/15 hover:bg-black/45"
+            >
+              Back to Host
+            </button>
 
-          <div className="relative z-10 mx-auto flex min-h-[calc(100vh-73px)] max-w-6xl flex-col px-6 py-8">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex flex-1 justify-center">
-                <div className="w-full max-w-3xl rounded-2xl bg-white px-8 py-4 shadow-2xl ring-1 ring-black/10">
-                  <h2 className="text-center text-4xl font-extrabold tracking-tight text-gray-900">
-                    {activeQuizTitle || "Final Results"}
-                  </h2>
-                </div>
-              </div>
-
-              <div className="shrink-0">
-                <button
-                  onClick={() => router.push("/host")}
-                  className="rounded-full bg-black/35 px-4 py-3 text-sm font-semibold text-white/90 ring-1 ring-white/15 hover:bg-black/45"
-                >
-                  Back to Host
-                </button>
-              </div>
-            </div>
-
-            <div className="flex flex-1 items-end justify-center pb-8 pt-14">
+            <div className="flex flex-1 items-center justify-center py-14">
               <div className="relative w-full">
+                <div className="mb-8 text-center">
+                  <div className="inline-flex items-center justify-center rounded-2xl bg-white/12 px-8 py-4 text-4xl font-extrabold tracking-tight ring-1 ring-white/15 backdrop-blur">
+                    {activeQuizTitle || "Final Results"}
+                  </div>
+                </div>
+
                 <div className="mx-auto flex max-w-4xl items-end justify-center gap-6">
                   {order.map((podiumIndex) => {
                     const place = podiumIndex + 1;
                     const player = podium[podiumIndex];
                     const meta = medal[podiumIndex];
-                    const isPlaceholder = player.name === "Waiting for players…";
+                    const isPlaceholder =
+                      player.name === "Waiting for players…";
 
                     return (
                       <div
                         key={`${place}-${player.name}`}
-                        className="w-[220px] sm:w-[240px] md:w-[280px]"
+                        className="w-[220px] sm:w-60 md:w-[280px]"
                       >
                         <div className="mb-4 text-center">
-                          <div className="text-3xl sm:text-4xl font-black tracking-tight">
-                            {isPlaceholder ? "—" : player.name}
+                          <div className="flex items-center justify-center gap-3">
+                            {!isPlaceholder && (
+                              <span className="text-4xl leading-none">
+                                {avatarForName(player.name)}
+                              </span>
+                            )}
+                            <div className="text-3xl sm:text-4xl font-black tracking-tight">
+                              {isPlaceholder ? "—" : player.name}
+                            </div>
                           </div>
                         </div>
 
@@ -1168,10 +1105,10 @@ export default function HostGamePage() {
                             >
                               <div className="absolute -top-10 left-1/2 h-12 w-24 -translate-x-1/2 rounded-b-3xl bg-linear-to-b from-sky-300/70 to-indigo-500/25 blur-[0px]" />
                               <div className="absolute -top-10 left-1/2 h-12 w-24 -translate-x-1/2 rounded-b-3xl bg-linear-to-r from-pink-400/40 via-sky-300/30 to-fuchsia-400/40 opacity-70" />
-                              <div className="text-4xl font-black text-white/95 drop-shadow">
+                              <div className="text-5xl font-black text-white/95 drop-shadow leading-none">
                                 {isPlaceholder
                                   ? meta.label
-                                  : initialsForName(player.name)}
+                                  : avatarForName(player.name)}
                               </div>
                             </div>
 
@@ -1203,55 +1140,21 @@ export default function HostGamePage() {
                     );
                   })}
                 </div>
-
-                <div className="mx-auto mt-10 max-w-3xl">
-                  <div className="rounded-2xl bg-black/35 px-8 py-5 shadow-2xl ring-1 ring-white/15">
-                    <div className="text-center text-2xl font-extrabold tracking-tight">
-                      Runners-up
-                    </div>
-
-                    <div className="mt-4 grid grid-cols-2 gap-4">
-                      {Array.from({ length: 2 }, (_, idx) => {
-                        const runner = runnersUp[idx];
-                        const rank = idx + 4;
-                        return (
-                          <div
-                            key={runner?.name ?? `runner-placeholder-${idx}`}
-                            className="flex items-center justify-between rounded-2xl bg-white/12 px-5 py-4 ring-1 ring-white/10"
-                          >
-                            <div className="flex items-center gap-4">
-                              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-black/35 ring-1 ring-white/15">
-                                <span className="text-xl font-black tabular-nums">
-                                  {rank}
-                                </span>
-                              </div>
-                              <div className="text-xl font-extrabold tracking-tight">
-                                {runner?.name ?? "—"}
-                              </div>
-                            </div>
-                            <div className="text-xl font-black tabular-nums text-white/90">
-                              {runner?.score ?? "—"}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
         </div>
       );
-    })()
-  );
+    })();
 
   return stage === "lobby" ? (
     renderLobby()
-  ) : stage === "question" && currentQuestion && showResults ? (
+  ) : stage === "question" && currentQuestion ? (
     renderQuestion()
+  ) : stage === "final" ? (
+    renderFinal()
   ) : (
-    <div className="min-h-screen bg-[#0f0a1f] text-white">
+    <div className={`min-h-screen text-white ${WINTER_BG_CLASS}`}>
       <header className="flex items-center justify-between px-8 py-4 border-b border-white/10 bg-black/30 backdrop-blur">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-linear-to-br from-purple-500 to-pink-500 flex items-center justify-center text-xl font-bold">
@@ -1271,10 +1174,7 @@ export default function HostGamePage() {
         </button>
       </header>
 
-      <div className={stage === "final" ? "p-0" : "p-8 space-y-6"}>
-        {stage === "question" && currentQuestion && renderQuestion()}
-        {stage === "final" && renderFinal()}
-      </div>
+      <div className="p-8 space-y-6" />
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { initSocketServer, socket } from "@/lib/socketClient";
 import { useRouter } from "next/navigation";
 import { kahootShapeForIndex, KahootShapeIcon } from "@/components/KahootShapeIcon";
+import { KahootCheckIcon } from "@/components/KahootCheckIcon";
 
 interface Player {
   name: string;
@@ -676,26 +677,23 @@ export default function HostPage() {
                       placeholder={`Answer ${idx + 1}`}
                     />
 
-	                    <button
-	                      onClick={() =>
-	                        setBuilderQuestions((prev) =>
-	                          prev.map((q, i) =>
-	                            i === builderIndex
-	                              ? { ...q, correctAnswer: idx }
-	                              : q
-	                          )
-	                        )
-	                      }
+                    <button
+                      onClick={() =>
+                        setBuilderQuestions((prev) =>
+                          prev.map((q, i) =>
+                            i === builderIndex
+                              ? { ...q, correctAnswer: idx }
+                              : q
+                          )
+                        )
+                      }
 	                      className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${
 	                        isCorrect
 	                          ? "bg-white text-green-600 border-white"
 	                          : "border-white/60 text-white/80"
 	                      }`}
 	                    >
-	                      <KahootShapeIcon
-	                        kind={kahootShapeForIndex(idx)}
-	                        className="h-4 w-4"
-	                      />
+	                      <KahootCheckIcon className="h-4 w-4" />
 	                    </button>
                   </div>
                 </div>

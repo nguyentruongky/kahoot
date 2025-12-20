@@ -3,6 +3,7 @@ import { initSocketServer, socket } from "@/lib/socketClient";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { kahootShapeForIndex, KahootShapeIcon } from "@/components/KahootShapeIcon";
+import { KahootCheckIcon } from "@/components/KahootCheckIcon";
 
 interface Question {
   text: string;
@@ -371,16 +372,11 @@ export default function PlayerPage() {
 
             <div className="mt-6 flex items-center justify-center">
               <div className="text-7xl font-black drop-shadow-[0_3px_0_rgba(0,0,0,0.25)]">
-                {resultPopup.variant === "success" ? (
-                  <KahootShapeIcon
-                    kind={kahootShapeForIndex(selectedAnswer ?? 0)}
-                    className="h-20 w-20 text-white"
-                  />
-                ) : resultPopup.variant === "danger" ? (
-                  "✕"
-                ) : (
-                  "⏱"
-                )}
+                {resultPopup.variant === "success"
+                  ? <KahootCheckIcon className="h-20 w-20 text-white" />
+                  : resultPopup.variant === "danger"
+                    ? "✕"
+                    : "⏱"}
               </div>
             </div>
 

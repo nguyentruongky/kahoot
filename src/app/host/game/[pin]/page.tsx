@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { initSocketServer, socket } from "@/lib/socketClient";
 import { PseudoQrCode } from "@/components/PseudoQrCode";
 import { kahootShapeForIndex, KahootShapeIcon } from "@/components/KahootShapeIcon";
+import { KahootCheckIcon } from "@/components/KahootCheckIcon";
 
 interface Player {
   name: string;
@@ -752,11 +753,7 @@ export default function HostGamePage() {
                             </span>
                             <span className="tabular-nums">{count}</span>
                             {idx === currentQuestion?.correctAnswer && (
-                              <KahootShapeIcon
-                                kind={meta[idx].shape}
-                                variant="outline"
-                                className="h-5 w-5 text-white/90"
-                              />
+                              <KahootCheckIcon className="h-5 w-5 text-white/95" />
                             )}
                           </div>
                         ))}
@@ -784,11 +781,7 @@ export default function HostGamePage() {
                             </div>
                             <div className="text-4xl font-black text-white/70">
                               {isCorrect ? (
-                                <KahootShapeIcon
-                                  kind={meta[idx].shape}
-                                  variant="outline"
-                                  className="h-9 w-9 text-white/85"
-                                />
+                                <KahootCheckIcon className="h-10 w-10 text-white/85" />
                               ) : (
                                 "✕"
                               )}

@@ -14,12 +14,10 @@ export function KahootShapeIcon({
   kind,
   className,
   title,
-  variant = "solid",
 }: {
   kind: KahootShapeKind;
   className?: string;
   title?: string;
-  variant?: "solid" | "outline";
 }) {
   const common = {
     className,
@@ -33,53 +31,27 @@ export function KahootShapeIcon({
     case "triangle":
       return (
         <svg {...common}>
-          <path
-            d="M12 3L22 21H2L12 3Z"
-            fill={variant === "solid" ? "currentColor" : "none"}
-            stroke={variant === "outline" ? "currentColor" : "none"}
-            strokeWidth={variant === "outline" ? 2 : 0}
-            strokeLinejoin="round"
-          />
+          <path d="M12 3L22 21H2L12 3Z" fill="currentColor" />
         </svg>
       );
     case "diamond":
       return (
         <svg {...common}>
-          <path
-            d="M12 2L22 12L12 22L2 12L12 2Z"
-            fill={variant === "solid" ? "currentColor" : "none"}
-            stroke={variant === "outline" ? "currentColor" : "none"}
-            strokeWidth={variant === "outline" ? 2 : 0}
-            strokeLinejoin="round"
-          />
+          <path d="M12 2L22 12L12 22L2 12L12 2Z" fill="currentColor" />
         </svg>
       );
     case "circle":
       return (
         <svg {...common}>
-          <circle
-            cx="12"
-            cy="12"
-            r="9"
-            fill={variant === "solid" ? "currentColor" : "none"}
-            stroke={variant === "outline" ? "currentColor" : "none"}
-            strokeWidth={variant === "outline" ? 2 : 0}
-          />
+          <circle cx="12" cy="12" r="9" fill="currentColor" />
         </svg>
       );
     case "square":
       return (
         <svg {...common}>
-          <rect
-            x="4"
-            y="4"
-            width="16"
-            height="16"
-            fill={variant === "solid" ? "currentColor" : "none"}
-            stroke={variant === "outline" ? "currentColor" : "none"}
-            strokeWidth={variant === "outline" ? 2 : 0}
-          />
+          <rect x="4" y="4" width="16" height="16" fill="currentColor" />
         </svg>
       );
   }
 }
+

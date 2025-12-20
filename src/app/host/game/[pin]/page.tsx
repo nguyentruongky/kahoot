@@ -38,6 +38,113 @@ type EndQuestionPayload = {
   >;
 };
 
+const FINAL_CONFETTI: Array<{
+  key: string;
+  className: string;
+  style: React.CSSProperties;
+}> = [
+  {
+    key: "c1",
+    className: "h-3 w-3 rounded-sm bg-rose-400/80",
+    style: { left: "6%", top: "10%", transform: "rotate(12deg)" },
+  },
+  {
+    key: "c2",
+    className: "h-2.5 w-6 rounded-sm bg-amber-300/80",
+    style: { left: "14%", top: "22%", transform: "rotate(-18deg)" },
+  },
+  {
+    key: "c3",
+    className: "h-4 w-4 rounded-full bg-sky-300/70",
+    style: { left: "22%", top: "14%" },
+  },
+  {
+    key: "c4",
+    className: "h-3 w-3 rounded-sm bg-emerald-300/75",
+    style: { left: "30%", top: "28%", transform: "rotate(30deg)" },
+  },
+  {
+    key: "c5",
+    className: "h-3 w-8 rounded-sm bg-violet-300/70",
+    style: { left: "38%", top: "12%", transform: "rotate(-10deg)" },
+  },
+  {
+    key: "c6",
+    className: "h-4 w-4 rounded-full bg-fuchsia-300/70",
+    style: { left: "46%", top: "20%" },
+  },
+  {
+    key: "c7",
+    className: "h-3 w-3 rounded-sm bg-red-300/70",
+    style: { left: "55%", top: "8%", transform: "rotate(8deg)" },
+  },
+  {
+    key: "c8",
+    className: "h-2.5 w-7 rounded-sm bg-yellow-300/75",
+    style: { left: "63%", top: "18%", transform: "rotate(20deg)" },
+  },
+  {
+    key: "c9",
+    className: "h-4 w-4 rounded-full bg-lime-300/70",
+    style: { left: "72%", top: "12%" },
+  },
+  {
+    key: "c10",
+    className: "h-3 w-3 rounded-sm bg-blue-300/70",
+    style: { left: "80%", top: "24%", transform: "rotate(-25deg)" },
+  },
+  {
+    key: "c11",
+    className: "h-3 w-6 rounded-sm bg-orange-300/70",
+    style: { left: "88%", top: "14%", transform: "rotate(16deg)" },
+  },
+  {
+    key: "c12",
+    className: "h-4 w-4 rounded-full bg-teal-300/65",
+    style: { left: "93%", top: "28%" },
+  },
+  {
+    key: "c13",
+    className: "h-3 w-3 rounded-sm bg-rose-400/70",
+    style: { left: "10%", top: "60%", transform: "rotate(28deg)" },
+  },
+  {
+    key: "c14",
+    className: "h-4 w-4 rounded-full bg-amber-300/70",
+    style: { left: "18%", top: "72%" },
+  },
+  {
+    key: "c15",
+    className: "h-3 w-7 rounded-sm bg-sky-300/70",
+    style: { left: "28%", top: "64%", transform: "rotate(-14deg)" },
+  },
+  {
+    key: "c16",
+    className: "h-3 w-3 rounded-sm bg-emerald-300/70",
+    style: { left: "40%", top: "74%", transform: "rotate(10deg)" },
+  },
+  {
+    key: "c17",
+    className: "h-4 w-4 rounded-full bg-fuchsia-300/65",
+    style: { left: "50%", top: "66%" },
+  },
+  {
+    key: "c18",
+    className: "h-3 w-8 rounded-sm bg-violet-300/65",
+    style: { left: "62%", top: "72%", transform: "rotate(22deg)" },
+  },
+  {
+    key: "c19",
+    className: "h-3 w-3 rounded-sm bg-lime-300/70",
+    style: { left: "74%", top: "64%", transform: "rotate(-18deg)" },
+  },
+  {
+    key: "c20",
+    className: "h-4 w-4 rounded-full bg-blue-300/65",
+    style: { left: "86%", top: "72%" },
+  },
+];
+
 export default function HostGamePage() {
   const router = useRouter();
   const params = useParams<{ pin?: string | string[] }>();
@@ -138,6 +245,15 @@ export default function HostGamePage() {
     ];
     const hash = name.split("").reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
     return avatars[hash % avatars.length];
+  };
+
+  const initialsForName = (name: string) => {
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return "??";
+    const first = parts[0]?.[0] ?? "";
+    const last = parts.length > 1 ? parts[parts.length - 1]?.[0] ?? "" : "";
+    const result = `${first}${last}`.toUpperCase();
+    return result || "??";
   };
 
   useEffect(() => {
@@ -662,26 +778,59 @@ export default function HostGamePage() {
                 const leaderboard = players
                   .slice()
                   .sort((a, b) => b.score - a.score);
+                const topPlayers = leaderboard.slice(0, 10);
+                const minRows = 3;
+                const rows: Array<
+                  | Player
+                  | { __placeholder: true; __key: string; name: string; score: 0 }
+                > = Array.from(
+                  { length: Math.max(minRows, topPlayers.length) },
+                  (_, idx) =>
+                    topPlayers[idx] ?? {
+                      __placeholder: true,
+                      __key: `placeholder-${idx}`,
+                      name: "Waiting for players…",
+                      score: 0 as const,
+                    }
+                );
 
                 return (
                   <div className="flex flex-1 items-center justify-center">
                     <div className="w-full max-w-5xl px-2">
                       <div className="mt-12 space-y-0">
-                        {leaderboard.slice(0, 10).map((p) => (
+                        {rows.map((p, idx) => (
                           <div
-                            key={p.name}
-                            className="h-20 rounded-xl bg-white shadow-2xl ring-1 ring-black/10 flex items-center justify-between px-6"
+                            key={"__placeholder" in p ? p.__key : p.name}
+                            className={`h-20 rounded-xl shadow-2xl flex items-center justify-between px-6 ring-1 ring-black/10 ${
+                              "__placeholder" in p
+                                ? "bg-white/80 text-gray-400"
+                                : "bg-white"
+                            }`}
                           >
                             <div className="flex items-center gap-5">
                               <div className="h-12 w-12 rounded-lg bg-gray-100 ring-1 ring-black/5 flex items-center justify-center text-2xl">
-                                {avatarForName(p.name)}
+                                {"__placeholder" in p
+                                  ? "👤"
+                                  : avatarForName(p.name)}
                               </div>
-                              <div className="text-3xl font-extrabold tracking-tight text-gray-900">
+                              <div
+                                className={`text-3xl font-extrabold tracking-tight ${
+                                  "__placeholder" in p
+                                    ? "text-gray-500"
+                                    : "text-gray-900"
+                                }`}
+                              >
                                 {p.name}
                               </div>
                             </div>
-                            <div className="text-4xl font-black tabular-nums text-gray-900">
-                              {p.score}
+                            <div
+                              className={`text-4xl font-black tabular-nums ${
+                                "__placeholder" in p
+                                  ? "text-gray-400"
+                                  : "text-gray-900"
+                              }`}
+                            >
+                              {"__placeholder" in p ? "—" : p.score}
                             </div>
                           </div>
                         ))}
@@ -910,69 +1059,191 @@ export default function HostGamePage() {
   );
 
   const renderFinal = () => (
-    <div className="bg-white text-gray-900 rounded-3xl shadow-2xl p-8">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <p className="text-sm text-gray-500">Game Over</p>
-          <h2 className="text-3xl font-bold">Here are your winners</h2>
-        </div>
+    (() => {
+      const leaderboard = players.slice().sort((a, b) => b.score - a.score);
+      const top = leaderboard.slice(0, 3);
+      const podium = Array.from({ length: 3 }, (_, idx) => {
+        return (
+          top[idx] ?? {
+            name: "Waiting for players…",
+            score: 0,
+          }
+        );
+      });
+      const runnersUp = leaderboard.slice(3, 5);
 
-        <button
-          onClick={() => router.push("/host")}
-          className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700"
-        >
-          Back to Host
-        </button>
-      </div>
+      const medal = [
+        {
+          label: "1",
+          medal: "bg-linear-to-br from-yellow-300 to-amber-500",
+          ring: "ring-yellow-200/60",
+          cardHeight: "h-[360px]",
+          cardTop: "mt-0",
+        },
+        {
+          label: "2",
+          medal: "bg-linear-to-br from-slate-200 to-slate-400",
+          ring: "ring-white/25",
+          cardHeight: "h-[310px]",
+          cardTop: "mt-10",
+        },
+        {
+          label: "3",
+          medal: "bg-linear-to-br from-amber-300 to-orange-500",
+          ring: "ring-amber-200/50",
+          cardHeight: "h-[290px]",
+          cardTop: "mt-14",
+        },
+      ] as const;
 
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        {finalResults.map((p, idx) => {
-          const colors = [
-            "border-yellow-400",
-            "border-gray-400",
-            "border-amber-300",
-          ];
-          const titles = ["1st Place", "2nd Place", "3rd Place"];
+      const order = [1, 0, 2] as const; // 2nd, 1st, 3rd
 
-          return (
-            <div
-              key={p.name}
-              className={`rounded-2xl border-2 ${colors[idx]} p-4 bg-gray-50`}
-            >
-              <p className="text-sm text-gray-500">{titles[idx]}</p>
-              <h3 className="text-xl font-bold">{p.name}</h3>
-              <p className="text-purple-600 font-semibold">{p.score} pts</p>
-            </div>
-          );
-        })}
-      </div>
+      return (
+        <div className="relative min-h-[calc(100vh-73px)] overflow-hidden bg-[#46178f] text-white">
+          <div className="absolute inset-0 opacity-70">
+            <div className="absolute -left-48 -top-48 h-[720px] w-[720px] rounded-full bg-fuchsia-500/20 blur-3xl" />
+            <div className="absolute -right-56 top-16 h-[760px] w-[760px] rounded-full bg-indigo-500/18 blur-3xl" />
+            <div className="absolute left-1/3 -bottom-72 h-[820px] w-[820px] rounded-full bg-violet-500/18 blur-3xl" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_10%,rgba(255,255,255,0.10),rgba(255,255,255,0)_56%)]" />
+          </div>
 
-      <div className="rounded-2xl border border-gray-200 overflow-hidden">
-        <div className="p-4 border-b flex items-center justify-between">
-          <p className="font-semibold">Final Leaderboard</p>
-        </div>
-
-        <div className="divide-y">
-          {players
-            .slice()
-            .sort((a, b) => b.score - a.score)
-            .map((p, idx) => (
-              <div
-                key={p.name}
-                className="p-4 flex items-center justify-between"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="w-8 text-center font-bold text-gray-600">
-                    {idx + 1}
-                  </span>
-                  <span className="font-semibold">{p.name}</span>
-                </div>
-                <span className="text-purple-600 font-bold">{p.score} pts</span>
-              </div>
+          <div className="pointer-events-none absolute inset-0">
+            {FINAL_CONFETTI.map((piece) => (
+              <span
+                key={piece.key}
+                className={`absolute ${piece.className}`}
+                style={piece.style}
+              />
             ))}
+          </div>
+
+          <div className="relative z-10 mx-auto flex min-h-[calc(100vh-73px)] max-w-6xl flex-col px-6 py-8">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex flex-1 justify-center">
+                <div className="w-full max-w-3xl rounded-2xl bg-white px-8 py-4 shadow-2xl ring-1 ring-black/10">
+                  <h2 className="text-center text-4xl font-extrabold tracking-tight text-gray-900">
+                    {activeQuizTitle || "Final Results"}
+                  </h2>
+                </div>
+              </div>
+
+              <div className="shrink-0">
+                <button
+                  onClick={() => router.push("/host")}
+                  className="rounded-full bg-black/35 px-4 py-3 text-sm font-semibold text-white/90 ring-1 ring-white/15 hover:bg-black/45"
+                >
+                  Back to Host
+                </button>
+              </div>
+            </div>
+
+            <div className="flex flex-1 items-end justify-center pb-8 pt-14">
+              <div className="relative w-full">
+                <div className="mx-auto flex max-w-4xl items-end justify-center gap-6">
+                  {order.map((podiumIndex) => {
+                    const place = podiumIndex + 1;
+                    const player = podium[podiumIndex];
+                    const meta = medal[podiumIndex];
+                    const isPlaceholder = player.name === "Waiting for players…";
+
+                    return (
+                      <div
+                        key={`${place}-${player.name}`}
+                        className="w-[220px] sm:w-[240px] md:w-[280px]"
+                      >
+                        <div className="mb-4 text-center">
+                          <div className="text-3xl sm:text-4xl font-black tracking-tight">
+                            {isPlaceholder ? "—" : player.name}
+                          </div>
+                        </div>
+
+                        <div
+                          className={`relative overflow-hidden rounded-3xl bg-white/12 shadow-2xl ring-1 ring-white/15 backdrop-blur ${meta.cardHeight} ${meta.cardTop}`}
+                        >
+                          <div className="absolute left-0 right-0 top-0 h-12 bg-linear-to-b from-white/15 to-transparent" />
+
+                          <div className="flex h-full flex-col items-center justify-start pt-10">
+                            <div
+                              className={`relative flex h-24 w-24 items-center justify-center rounded-full shadow-2xl ring-4 ${meta.ring} ${meta.medal}`}
+                            >
+                              <div className="absolute -top-10 left-1/2 h-12 w-24 -translate-x-1/2 rounded-b-3xl bg-linear-to-b from-sky-300/70 to-indigo-500/25 blur-[0px]" />
+                              <div className="absolute -top-10 left-1/2 h-12 w-24 -translate-x-1/2 rounded-b-3xl bg-linear-to-r from-pink-400/40 via-sky-300/30 to-fuchsia-400/40 opacity-70" />
+                              <div className="text-4xl font-black text-white/95 drop-shadow">
+                                {isPlaceholder
+                                  ? meta.label
+                                  : initialsForName(player.name)}
+                              </div>
+                            </div>
+
+                            <div className="mt-7 text-center">
+                              <div className="text-4xl font-black tabular-nums">
+                                {isPlaceholder ? "0" : player.score}
+                              </div>
+                              <div className="mt-2 text-2xl font-bold text-white/85">
+                                pts
+                              </div>
+                            </div>
+
+                            <div className="mt-auto w-full px-10 pb-8">
+                              <div className="flex items-center justify-center rounded-2xl bg-black/25 px-5 py-3 ring-1 ring-white/10">
+                                <span className="text-lg font-semibold text-white/85">
+                                  {place}
+                                  {place === 1
+                                    ? "st"
+                                    : place === 2
+                                    ? "nd"
+                                    : "rd"}{" "}
+                                  place
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="mx-auto mt-10 max-w-3xl">
+                  <div className="rounded-2xl bg-black/35 px-8 py-5 shadow-2xl ring-1 ring-white/15">
+                    <div className="text-center text-2xl font-extrabold tracking-tight">
+                      Runners-up
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-2 gap-4">
+                      {Array.from({ length: 2 }, (_, idx) => {
+                        const runner = runnersUp[idx];
+                        const rank = idx + 4;
+                        return (
+                          <div
+                            key={runner?.name ?? `runner-placeholder-${idx}`}
+                            className="flex items-center justify-between rounded-2xl bg-white/12 px-5 py-4 ring-1 ring-white/10"
+                          >
+                            <div className="flex items-center gap-4">
+                              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-black/35 ring-1 ring-white/15">
+                                <span className="text-xl font-black tabular-nums">
+                                  {rank}
+                                </span>
+                              </div>
+                              <div className="text-xl font-extrabold tracking-tight">
+                                {runner?.name ?? "—"}
+                              </div>
+                            </div>
+                            <div className="text-xl font-black tabular-nums text-white/90">
+                              {runner?.score ?? "—"}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
+      );
+    })()
   );
 
   return stage === "lobby" ? (
@@ -1000,7 +1271,7 @@ export default function HostGamePage() {
         </button>
       </header>
 
-      <div className="p-8 space-y-6">
+      <div className={stage === "final" ? "p-0" : "p-8 space-y-6"}>
         {stage === "question" && currentQuestion && renderQuestion()}
         {stage === "final" && renderFinal()}
       </div>

@@ -235,6 +235,7 @@ function wireConnection(io: IOServer, socket: Socket) {
     io.to(pin).emit("end_game", {
       totalPlayers: room.players.length,
       leaderboard: leaderboard.slice(0, 10),
+      leaderboardAll: leaderboard,
       byName,
     });
   });

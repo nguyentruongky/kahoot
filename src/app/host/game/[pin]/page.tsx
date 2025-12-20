@@ -229,7 +229,8 @@ export default function HostGamePage() {
 
         const quizData: { title?: string; questions?: QuizQuestion[] } =
           await quizRes.json();
-        const questions = quizData.questions ?? [];
+        const QUESTION_LIMIT = 3;
+        const questions = (quizData.questions ?? []).slice(0, QUESTION_LIMIT);
 
         if (questions.length === 0) {
           alert("This quiz has no questions!");

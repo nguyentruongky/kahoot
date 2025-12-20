@@ -25,7 +25,7 @@ export default function JoinPage() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 p-6">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-linear-to-br from-blue-500 to-purple-600 p-6">
       <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
         <h1 className="text-4xl font-bold text-purple-700 mb-2 text-center">
           Join Game

@@ -44,6 +44,7 @@ export default function PlayerPage() {
     score: number;
     rank?: number;
     totalPlayers?: number;
+    leaderboardWindow?: Array<{ name: string; score: number; rank?: number }>;
   } | null>(null);
   const questionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const selectedAnswerRef = useRef<number | null>(null);
@@ -168,9 +169,29 @@ export default function PlayerPage() {
     const handleEndGame = (data?: {
       totalPlayers?: number;
       byName?: Record<string, { score: number; rank: number }>;
+      leaderboardAll?: Array<{ name: string; score: number; rank: number }>;
     }) => {
       console.log("🎉 Game ended");
       const me = data?.byName?.[nameRef.current];
+      const leaderboard =
+        Array.isArray(data?.leaderboardAll) ? data?.leaderboardAll : [];
+      const myIdx = leaderboard.findIndex((p) => p.name === nameRef.current);
+      const leaderboardWindow = (() => {
+        if (leaderboard.length === 0) return undefined;
+        if (leaderboard.length <= 5) return leaderboard;
+        if (myIdx === -1) return leaderboard.slice(0, 5);
+
+        let start = Math.max(0, myIdx - 2);
+        let end = Math.min(leaderboard.length, myIdx + 3);
+
+        while (end - start < 5) {
+          if (start > 0) start -= 1;
+          else if (end < leaderboard.length) end += 1;
+          else break;
+        }
+
+        return leaderboard.slice(start, end);
+      })();
       setFinalPopup({
         open: true,
         score: typeof me?.score === "number" ? me.score : scoreRef.current,
@@ -179,6 +200,7 @@ export default function PlayerPage() {
           typeof data?.totalPlayers === "number"
             ? data.totalPlayers
             : undefined,
+        leaderboardWindow,
       });
       setResultPopup(null);
       setGameStatus("ended");
@@ -323,20 +345,50 @@ export default function PlayerPage() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-purple-900 p-4">
       {finalPopup?.open && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center bg-linear-to-b from-purple-950 to-black p-6">
-          <div className="w-full max-w-md rounded-3xl border border-white/10 bg-white/5 shadow-2xl overflow-hidden">
+        <div className="fixed inset-0 z-60 flex items-center justify-center bg-linear-to-br from-fuchsia-600 via-purple-700 to-indigo-900 p-6">
+          <div className="absolute inset-0 opacity-80">
+            <div className="absolute -top-24 -left-24 h-72 w-72 rounded-full bg-cyan-300/35 blur-3xl" />
+            <div className="absolute top-1/3 -right-28 h-80 w-80 rounded-full bg-yellow-200/25 blur-3xl" />
+            <div className="absolute -bottom-28 left-1/3 h-80 w-80 rounded-full bg-pink-300/30 blur-3xl" />
+          </div>
+
+          <div className="relative w-full max-w-md rounded-[32px] border border-white/20 bg-white/10 shadow-[0_40px_120px_rgba(0,0,0,0.55)] overflow-hidden backdrop-blur-xl">
             <div className="p-8 text-center text-white">
               <p className="text-white/70 font-semibold">Final Results</p>
               <h2 className="mt-2 text-4xl font-extrabold tracking-tight">
                 Game Over
               </h2>
 
+              {(() => {
+                const rank = finalPopup.rank;
+                if (typeof rank !== "number") return null;
+                if (rank === 1)
+                  return (
+                    <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-yellow-300/25 px-4 py-2 text-sm font-extrabold text-yellow-50 ring-1 ring-yellow-200/40">
+                      <span className="text-base">🏆</span> Winner
+                    </div>
+                  );
+                if (rank === 2)
+                  return (
+                    <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-sm font-extrabold text-white ring-1 ring-white/20">
+                      <span className="text-base">🥈</span> Runner-up
+                    </div>
+                  );
+                if (rank === 3)
+                  return (
+                    <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-amber-300/20 px-4 py-2 text-sm font-extrabold text-amber-50 ring-1 ring-amber-200/35">
+                      <span className="text-base">🥉</span> Top 3
+                    </div>
+                  );
+                return null;
+              })()}
+
               <div className="mt-8 grid grid-cols-2 gap-4">
-                <div className="rounded-2xl bg-white/10 border border-white/10 p-5">
+                <div className="rounded-2xl bg-white/12 border border-white/15 p-5">
                   <p className="text-white/70 text-sm">Total score</p>
                   <p className="mt-2 text-3xl font-black">{finalPopup.score}</p>
                 </div>
-                <div className="rounded-2xl bg-white/10 border border-white/10 p-5">
+                <div className="rounded-2xl bg-white/12 border border-white/15 p-5">
                   <p className="text-white/70 text-sm">Position</p>
                   <p className="mt-2 text-3xl font-black">
                     {typeof finalPopup.rank === "number"
@@ -351,9 +403,73 @@ export default function PlayerPage() {
                 </div>
               </div>
 
+              {Array.isArray(finalPopup.leaderboardWindow) &&
+                finalPopup.leaderboardWindow.length > 0 && (
+                  <div className="mt-7 rounded-2xl border border-white/15 bg-black/15 p-4 text-left ring-1 ring-white/10">
+                    <p className="text-sm font-semibold text-white/85 px-1">
+                      Standings
+                    </p>
+                    <div className="mt-3 space-y-2">
+                      {finalPopup.leaderboardWindow.map((p) => {
+                        const isMe = p.name === nameRef.current;
+                        const rank = typeof p.rank === "number" ? p.rank : null;
+                        const rowTone =
+                          rank === 1
+                            ? "bg-yellow-300/25 ring-yellow-200/30"
+                            : rank === 2
+                              ? "bg-white/18 ring-white/25"
+                              : rank === 3
+                                ? "bg-amber-300/20 ring-amber-200/25"
+                                : "bg-black/15 ring-white/10";
+                        const meTone = isMe ? "ring-2 ring-purple-200/60" : "";
+                        const medal =
+                          rank === 1
+                            ? "🥇"
+                            : rank === 2
+                              ? "🥈"
+                              : rank === 3
+                                ? "🥉"
+                                : null;
+                        return (
+                          <div
+                            key={p.name}
+                            className={`flex items-center justify-between rounded-xl px-4 py-3 ring-1 ${rowTone} ${meTone}`}
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <span className="w-12 text-white/80 font-mono text-sm">
+                                {typeof p.rank === "number" ? `#${p.rank}` : "—"}
+                              </span>
+                              {medal && (
+                                <span className="w-6 text-lg leading-none">
+                                  {medal}
+                                </span>
+                              )}
+                              <span
+                                className={`truncate font-semibold ${
+                                  isMe ? "text-white" : "text-white/90"
+                                }`}
+                              >
+                                {p.name}
+                              </span>
+                              {isMe && (
+                                <span className="shrink-0 text-xs font-semibold text-purple-100">
+                                  You
+                                </span>
+                              )}
+                            </div>
+                            <span className="shrink-0 font-mono text-white">
+                              {p.score}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
               <button
                 onClick={() => router.push("/join")}
-                className="mt-8 w-full rounded-2xl bg-white text-purple-900 font-bold py-3 hover:bg-white/90 transition"
+                className="mt-8 w-full rounded-2xl bg-white text-purple-900 font-extrabold py-3 hover:bg-white/90 transition shadow-[0_10px_0_rgba(0,0,0,0.18)] active:translate-y-0.5 active:shadow-[0_6px_0_rgba(0,0,0,0.18)]"
               >
                 Join Another Game
               </button>

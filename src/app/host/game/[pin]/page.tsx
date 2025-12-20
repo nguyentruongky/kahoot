@@ -229,8 +229,7 @@ export default function HostGamePage() {
 
         const quizData: { title?: string; questions?: QuizQuestion[] } =
           await quizRes.json();
-        const QUESTION_LIMIT = 3;
-        const questions = (quizData.questions ?? []).slice(0, QUESTION_LIMIT);
+        const questions = quizData.questions ?? [];
 
         if (questions.length === 0) {
           alert("This quiz has no questions!");
@@ -393,6 +392,14 @@ export default function HostGamePage() {
     setStage("final");
     setCurrentQuestion(null);
     setTimer(0);
+  };
+
+  const requestEndGame = () => {
+    const confirmed = window.confirm(
+      "End the game now? This will stop the game for everyone and show final results."
+    );
+    if (!confirmed) return;
+    finalizeGame();
   };
 
   const cancelAndExit = () => {
@@ -637,6 +644,14 @@ export default function HostGamePage() {
 
               <button
                 type="button"
+                onClick={requestEndGame}
+                className="h-14 rounded-xl bg-red-500/90 px-7 text-lg font-extrabold text-white shadow-sm ring-1 ring-white/10 hover:bg-red-500"
+              >
+                End
+              </button>
+
+              <button
+                type="button"
                 onClick={nextQuestion}
                 disabled={!startEnabled}
                 className="h-14 rounded-xl bg-white px-8 text-xl font-extrabold text-gray-900 shadow-sm ring-1 ring-black/5 hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-60"
@@ -712,19 +727,29 @@ export default function HostGamePage() {
             </div>
 
             <div className="shrink-0 flex items-center">
-              <button
-                type="button"
-                onClick={() => {
-                  if (postQuestionScreen === "results") {
-                    setPostQuestionScreen("scoreboard");
-                    return;
-                  }
-                  nextQuestion();
-                }}
-                className="rounded-lg bg-white px-5 py-3 text-lg font-bold text-gray-900 shadow ring-1 ring-black/10 hover:bg-white/90"
-              >
-                Next
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={requestEndGame}
+                  className="rounded-lg bg-red-500/90 px-5 py-3 text-lg font-bold text-white shadow ring-1 ring-white/10 hover:bg-red-500"
+                >
+                  End Game
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (postQuestionScreen === "results") {
+                      setPostQuestionScreen("scoreboard");
+                      return;
+                    }
+                    nextQuestion();
+                  }}
+                  className="rounded-lg bg-white px-5 py-3 text-lg font-bold text-gray-900 shadow ring-1 ring-black/10 hover:bg-white/90"
+                >
+                  Next
+                </button>
+              </div>
             </div>
           </div>
 
@@ -938,10 +963,10 @@ export default function HostGamePage() {
           <div className="w-full max-w-6xl">
             <div className="relative rounded-3xl bg-white/92 p-10 text-gray-900 shadow-2xl ring-1 ring-black/10 backdrop-blur">
               <button
-                onClick={finalizeGame}
+                onClick={requestEndGame}
                 className="absolute right-7 top-7 rounded-xl bg-gray-100 px-5 py-3 text-base font-semibold text-gray-700 hover:bg-gray-200"
               >
-                Quit Game
+                End Game
               </button>
 
               <div className="flex flex-col items-center gap-6">

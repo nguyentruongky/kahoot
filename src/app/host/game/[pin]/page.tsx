@@ -229,9 +229,9 @@ export default function HostGamePage() {
 
         const quizData: { title?: string; questions?: QuizQuestion[] } =
           await quizRes.json();
-        const limitedQuestions = (quizData.questions ?? []).slice(0, 5);
+        const questions = quizData.questions ?? [];
 
-        if (limitedQuestions.length === 0) {
+        if (questions.length === 0) {
           alert("This quiz has no questions!");
           router.push("/host");
           return;
@@ -239,7 +239,7 @@ export default function HostGamePage() {
 
         if (cancelled) return;
         setActiveQuizTitle(quizData.title || "Quiz");
-        setQuestionSet(limitedQuestions);
+        setQuestionSet(questions);
         setQuestionIndex(1);
       } catch (error) {
         console.error("HostGame load error:", error);

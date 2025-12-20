@@ -31,6 +31,7 @@ export default function HostPage() {
   // QUIZZES
   const [quizzes, setQuizzes] = useState<any[]>([]);
   const [activeQuizTitle, setActiveQuizTitle] = useState("");
+  const [deletingQuizId, setDeletingQuizId] = useState<string | null>(null);
 
   // GAME STATE
   const [pin, setPin] = useState("");
@@ -98,6 +99,30 @@ export default function HostPage() {
     fetch("/api/quizzes")
       .then((res) => res.json())
       .then((data) => setQuizzes(data));
+  };
+
+  const deleteQuiz = async (quizId: string, quizTitle?: string) => {
+    if (deletingQuizId) return;
+
+    const confirmed = window.confirm(
+      `Delete quiz${quizTitle ? ` “${quizTitle}”` : ""}? This cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    setDeletingQuizId(quizId);
+    try {
+      const res = await fetch(`/api/quizzes/${quizId}`, { method: "DELETE" });
+      if (!res.ok) {
+        const payload = (await res.json().catch(() => null)) as
+          | { error?: string }
+          | null;
+        alert(payload?.error || "Failed to delete quiz.");
+        return;
+      }
+      refreshQuizzes();
+    } finally {
+      setDeletingQuizId(null);
+    }
   };
 
   const normalizeImportedQuestions = (raw: unknown) => {
@@ -517,6 +542,17 @@ export default function HostPage() {
                   className="text-sm px-3 py-2 rounded-lg bg-linear-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
                 >
                   Play
+                </button>
+
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteQuiz(quiz._id, quiz.title);
+                  }}
+                  disabled={deletingQuizId === quiz._id}
+                  className="text-sm px-3 py-2 rounded-lg bg-red-600/80 hover:bg-red-600 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {deletingQuizId === quiz._id ? "Removing..." : "Remove"}
                 </button>
               </div>
             </div>

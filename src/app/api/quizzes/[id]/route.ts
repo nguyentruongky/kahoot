@@ -165,3 +165,18 @@ export async function PUT(
     );
   }
 }
+
+export async function DELETE(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  await connectDB();
+  const { id } = await params;
+
+  const deleted = await Quiz.findByIdAndDelete(id);
+  if (!deleted) {
+    return NextResponse.json({ error: "Quiz not found" }, { status: 404 });
+  }
+
+  return NextResponse.json({ ok: true });
+}

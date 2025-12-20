@@ -1,11 +1,18 @@
 "use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function JoinPage() {
+  const searchParams = useSearchParams();
   const [pin, setPin] = useState("");
   const [name, setName] = useState("");
   const router = useRouter();
+
+  useEffect(() => {
+    const initialPin = searchParams?.get("pin");
+    if (!initialPin) return;
+    setPin((prev) => (prev ? prev : initialPin.slice(0, 6)));
+  }, [searchParams]);
 
   const handleJoin = (e: React.FormEvent) => {
     e.preventDefault();

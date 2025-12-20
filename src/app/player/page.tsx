@@ -2,6 +2,7 @@
 import { initSocketServer, socket } from "@/lib/socketClient";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { kahootShapeForIndex, KahootShapeIcon } from "@/components/KahootShapeIcon";
 
 interface Question {
   text: string;
@@ -370,11 +371,16 @@ export default function PlayerPage() {
 
             <div className="mt-6 flex items-center justify-center">
               <div className="text-7xl font-black drop-shadow-[0_3px_0_rgba(0,0,0,0.25)]">
-                {resultPopup.variant === "success"
-                  ? "✓"
-                  : resultPopup.variant === "danger"
-                    ? "✕"
-                    : "⏱"}
+                {resultPopup.variant === "success" ? (
+                  <KahootShapeIcon
+                    kind={kahootShapeForIndex(selectedAnswer ?? 0)}
+                    className="h-20 w-20 text-white"
+                  />
+                ) : resultPopup.variant === "danger" ? (
+                  "✕"
+                ) : (
+                  "⏱"
+                )}
               </div>
             </div>
 
@@ -462,8 +468,11 @@ export default function PlayerPage() {
                     : ""
                 } text-white font-bold py-8 px-6 rounded-xl shadow-lg transform transition hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:transform-none`}
               >
-                <div className="text-4xl mb-2">
-                  {["△", "◇", "○", "□"][index % 4]}
+                <div className="mb-2 flex justify-center">
+                  <KahootShapeIcon
+                    kind={kahootShapeForIndex(index)}
+                    className="h-10 w-10 text-white"
+                  />
                 </div>
                 <div className="text-lg">{option}</div>
               </button>
@@ -482,7 +491,7 @@ export default function PlayerPage() {
                   if (selectedAnswer === null) {
                     return "⏰ Time's up! Waiting for host…";
                   }
-                  return "✓ Answer submitted! Waiting for host…";
+                  return "Answer submitted! Waiting for host…";
                 }
               })()}
             </div>

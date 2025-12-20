@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { initSocketServer, socket } from "@/lib/socketClient";
 import { useRouter } from "next/navigation";
+import { kahootShapeForIndex, KahootShapeIcon } from "@/components/KahootShapeIcon";
 
 interface Player {
   name: string;
@@ -638,7 +639,6 @@ export default function HostPage() {
                 "bg-yellow-500",
                 "bg-green-500",
               ];
-              const shapes = ["◆", "⬛", "⬤", "⬟"];
               const isCorrect =
                 builderQuestions[builderIndex]?.correctAnswer === idx;
 
@@ -647,10 +647,13 @@ export default function HostPage() {
                   key={idx}
                   className={`${
                     colors[idx % 4]
-                  } text-white rounded-2xl p-4 shadow-lg`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="text-2xl">{shapes[idx % 4]}</div>
+	                  } text-white rounded-2xl p-4 shadow-lg`}
+	                >
+	                  <div className="flex items-center gap-3">
+	                    <KahootShapeIcon
+	                      kind={kahootShapeForIndex(idx)}
+	                      className="h-7 w-7 text-white"
+	                    />
 
                     <input
                       value={opt}
@@ -673,24 +676,27 @@ export default function HostPage() {
                       placeholder={`Answer ${idx + 1}`}
                     />
 
-                    <button
-                      onClick={() =>
-                        setBuilderQuestions((prev) =>
-                          prev.map((q, i) =>
-                            i === builderIndex
-                              ? { ...q, correctAnswer: idx }
-                              : q
-                          )
-                        )
-                      }
-                      className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${
-                        isCorrect
-                          ? "bg-white text-green-600 border-white"
-                          : "border-white/60 text-white/80"
-                      }`}
-                    >
-                      ✓
-                    </button>
+	                    <button
+	                      onClick={() =>
+	                        setBuilderQuestions((prev) =>
+	                          prev.map((q, i) =>
+	                            i === builderIndex
+	                              ? { ...q, correctAnswer: idx }
+	                              : q
+	                          )
+	                        )
+	                      }
+	                      className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${
+	                        isCorrect
+	                          ? "bg-white text-green-600 border-white"
+	                          : "border-white/60 text-white/80"
+	                      }`}
+	                    >
+	                      <KahootShapeIcon
+	                        kind={kahootShapeForIndex(idx)}
+	                        className="h-4 w-4"
+	                      />
+	                    </button>
                   </div>
                 </div>
               );
@@ -797,30 +803,32 @@ export default function HostPage() {
       </div>
 
       {/* ANSWER OPTIONS */}
-      {!showResults ? (
-        <div className="grid grid-cols-2 gap-4">
-          {currentQuestion.options.map((opt: string, idx: number) => {
-            const colors = [
-              "bg-red-500",
-              "bg-blue-500",
-              "bg-yellow-500",
-              "bg-green-500",
-            ];
-            const shapes = ["■", "△", "⬟", "◯"];
+	      {!showResults ? (
+	        <div className="grid grid-cols-2 gap-4">
+	          {currentQuestion.options.map((opt: string, idx: number) => {
+	            const colors = [
+	              "bg-red-500",
+	              "bg-blue-500",
+	              "bg-yellow-500",
+	              "bg-green-500",
+	            ];
 
-            return (
-              <div
-                key={idx}
-                className={`${
-                  colors[idx % 4]
-                } text-white p-5 rounded-xl flex items-center gap-3 text-lg font-semibold`}
-              >
-                <span className="text-2xl">{shapes[idx % 4]}</span>
-                {opt}
-              </div>
-            );
-          })}
-        </div>
+	            return (
+	              <div
+	                key={idx}
+	                className={`${
+	                  colors[idx % 4]
+	                } text-white p-5 rounded-xl flex items-center gap-3 text-lg font-semibold`}
+	              >
+	                <KahootShapeIcon
+	                  kind={kahootShapeForIndex(idx)}
+	                  className="h-7 w-7 text-white"
+	                />
+	                {opt}
+	              </div>
+	            );
+	          })}
+	        </div>
       ) : (
         <div className="space-y-4">
           {currentQuestion.options.map((opt: string, idx: number) => {

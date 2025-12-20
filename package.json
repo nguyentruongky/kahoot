@@ -7,11 +7,13 @@
     "build": "next build",
     "start": "next start",
     "start:custom": "node --enable-source-maps -r ts-node/register server/custom-server.ts",
+    "start:socket": "node --enable-source-maps -r ts-node/register server/socket-only.ts",
     "lint": "eslint"
   },
   "dependencies": {
     "mongoose": "^8.19.3",
     "next": "16.0.10",
+    "qrcode": "^1.5.4",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "socket.io": "^4.8.1",

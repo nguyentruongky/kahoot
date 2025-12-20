@@ -4,7 +4,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { initSocketServer, socket } from "@/lib/socketClient";
 import { PseudoQrCode } from "@/components/PseudoQrCode";
-import { kahootShapeForIndex, KahootShapeIcon } from "@/components/KahootShapeIcon";
+import {
+  kahootShapeForIndex,
+  KahootShapeIcon,
+} from "@/components/KahootShapeIcon";
 import { KahootCheckIcon } from "@/components/KahootCheckIcon";
 
 interface Player {
@@ -43,8 +46,8 @@ export default function HostGamePage() {
     typeof rawPin === "string"
       ? rawPin
       : Array.isArray(rawPin)
-        ? rawPin[0] ?? ""
-        : "";
+      ? rawPin[0] ?? ""
+      : "";
 
   const [activeQuizTitle, setActiveQuizTitle] = useState("");
   const [players, setPlayers] = useState<Player[]>([]);
@@ -66,9 +69,9 @@ export default function HostGamePage() {
   const [questionEnded, setQuestionEnded] = useState(false);
   const [joinHost, setJoinHost] = useState<string>("");
   const [joinUrl, setJoinUrl] = useState<string>("");
-  const [joinLinkCopyState, setJoinLinkCopyState] = useState<
-    "idle" | "copied"
-  >("idle");
+  const [joinLinkCopyState, setJoinLinkCopyState] = useState<"idle" | "copied">(
+    "idle"
+  );
   const joinLinkCopyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null
   );
@@ -119,7 +122,20 @@ export default function HostGamePage() {
   };
 
   const avatarForName = (name: string) => {
-    const avatars = ["😀", "😎", "🦊", "🐻", "🐱", "🐶", "🐯", "🦁", "🐼", "🐸", "🐧", "🐨"];
+    const avatars = [
+      "😀",
+      "😎",
+      "🦊",
+      "🐻",
+      "🐱",
+      "🐶",
+      "🐯",
+      "🦁",
+      "🐼",
+      "🐸",
+      "🐧",
+      "🐨",
+    ];
     const hash = name.split("").reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
     return avatars[hash % avatars.length];
   };
@@ -249,7 +265,9 @@ export default function HostGamePage() {
       setAnswers((prev) => [...prev, data]);
       setPlayers((prev) =>
         prev.map((p) =>
-          p.name === data.name ? { ...p, score: p.score + (data.points ?? 0) } : p
+          p.name === data.name
+            ? { ...p, score: p.score + (data.points ?? 0) }
+            : p
         )
       );
     };
@@ -324,7 +342,13 @@ export default function HostGamePage() {
         socket.emit("end_question", { pin });
       }
     }
-  }, [answers.length, currentQuestion, expectedAnswerCount, pin, questionEnded]);
+  }, [
+    answers.length,
+    currentQuestion,
+    expectedAnswerCount,
+    pin,
+    questionEnded,
+  ]);
 
   useEffect(() => {
     if (!currentQuestion || !pin) return;
@@ -571,7 +595,7 @@ export default function HostGamePage() {
                     title={p.name}
                   >
                     <span className="text-xl">{avatarForName(p.name)}</span>
-                    <span className="max-w-[12rem] truncate font-semibold">
+                    <span className="max-w-48 truncate font-semibold">
                       {p.name}
                     </span>
                   </div>
@@ -596,7 +620,7 @@ export default function HostGamePage() {
   const renderQuestion = () => (
     <>
       {showResults ? (
-        <div className="relative min-h-[calc(100vh-88px)] bg-gradient-to-br from-[#2a0b5c] via-[#1b0b2e] to-[#0b1b4a] text-white overflow-hidden">
+        <div className="relative h-screen overflow-hidden bg-linear-to-br from-[#2a0b5c] via-[#1b0b2e] to-[#0b1b4a] text-white">
           <div className="absolute inset-0 opacity-75">
             <div className="absolute -left-48 -top-48 h-[620px] w-[620px] rounded-full bg-purple-700/35 blur-3xl" />
             <div className="absolute -right-56 top-24 h-[680px] w-[680px] rounded-full bg-fuchsia-600/25 blur-3xl" />
@@ -604,7 +628,7 @@ export default function HostGamePage() {
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_10%,rgba(255,255,255,0.10),rgba(255,255,255,0)_55%)]" />
           </div>
 
-          <div className="relative z-10 flex min-h-[calc(100vh-88px)] flex-col px-6 pt-6 pb-20">
+          <div className="relative z-10 flex h-full overflow-hidden flex-col px-6 pt-6 pb-16">
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1 flex justify-center">
                 <div className="max-w-5xl w-full rounded-xl bg-white px-8 py-5 shadow-2xl ring-1 ring-black/10">
@@ -642,7 +666,7 @@ export default function HostGamePage() {
                 return (
                   <div className="flex flex-1 items-center justify-center">
                     <div className="w-full max-w-5xl px-2">
-                      <div className="mt-12 space-y-4">
+                      <div className="mt-12 space-y-0">
                         {leaderboard.slice(0, 10).map((p) => (
                           <div
                             key={p.name}
@@ -705,63 +729,57 @@ export default function HostGamePage() {
 
               return (
                 <>
-                  <div className="flex flex-1 items-center justify-center">
-                    <div className="w-full max-w-4xl">
-                      <div className="h-[320px] flex items-end justify-center gap-10">
-                        {counts.map((count, idx) => {
-                          const heightPct = (count / maxCount) * 100;
-                          const barHeight =
-                            count === 0 ? 0 : Math.max(10, heightPct);
-                          return (
-                            <div
-                              key={idx}
-                              className="flex flex-col items-center justify-end h-full"
-                            >
+                  <div className="flex flex-1 min-h-0 items-end justify-center pt-24 pb-2">
+                    <div className="w-full max-w-6xl">
+                      <div className="relative h-[52vh] min-h-[380px] max-h-[520px]">
+                        <div className="absolute inset-0 grid h-full grid-cols-[repeat(4,112px)] justify-center gap-3 px-4 items-stretch">
+                          {counts.map((count, idx) => {
+                            const heightPct = (count / maxCount) * 100;
+                            const barHeight =
+                              count === 0 ? 0 : Math.max(18, heightPct);
+                            const isCorrect =
+                              idx === currentQuestion?.correctAnswer;
+
+                            return (
                               <div
-                                className={`w-[92px] rounded-md shadow-2xl ring-1 ring-black/20 ${meta[idx].bar}`}
-                                style={{ height: `${barHeight}%` }}
-                                title={`${count} answers`}
+                                key={idx}
+                                className="flex h-full items-end justify-center"
                               >
-                                <div className="h-full w-full flex items-end justify-start">
-                                  <div className="flex items-center gap-2 px-3 py-2 text-white text-lg font-extrabold drop-shadow">
-                                    <span className="inline-flex items-center justify-center">
-                                      <KahootShapeIcon
-                                        kind={meta[idx].shape}
-                                        className="h-5 w-5 text-white"
-                                      />
+                                <div className="flex h-full w-[112px] flex-col items-center justify-end rounded-xl overflow-hidden">
+                                  <div className="relative w-[112px] flex-1">
+                                    <div className="absolute inset-x-0 bottom-0 h-0.5 bg-black/30" />
+                                    <div
+                                      className={`absolute inset-x-0 bottom-0  shadow-2xl ring-1 ring-black/25 ${meta[idx].bar}`}
+                                      style={{ height: `${barHeight}%` }}
+                                      title={`${count} answers`}
+                                    />
+                                  </div>
+                                  <div
+                                    className={`h-14 w-full shadow-2xl ring-1 ring-black/25 flex items-center px-4 text-white ${meta[idx].chip}`}
+                                  >
+                                    <KahootShapeIcon
+                                      kind={meta[idx].shape}
+                                      className="h-7 w-7 shrink-0 text-white"
+                                    />
+                                    <span className="ml-3 text-4xl font-black tabular-nums">
+                                      {count}
                                     </span>
-                                    <span className="tabular-nums">{count}</span>
+                                    {isCorrect && (
+                                      <span className="ml-auto">
+                                        <KahootCheckIcon className="h-7 w-7 shrink-0 text-white/95" />
+                                      </span>
+                                    )}
                                   </div>
                                 </div>
                               </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-
-                      <div className="mt-6 flex items-center justify-center gap-3">
-                        {counts.map((count, idx) => (
-                          <div
-                            key={idx}
-                            className={`flex items-center gap-2 rounded-md px-4 py-2 text-white font-bold shadow ring-1 ring-black/20 ${meta[idx].chip}`}
-                          >
-                            <span className="inline-flex items-center justify-center">
-                              <KahootShapeIcon
-                                kind={meta[idx].shape}
-                                className="h-5 w-5 text-white"
-                              />
-                            </span>
-                            <span className="tabular-nums">{count}</span>
-                            {idx === currentQuestion?.correctAnswer && (
-                              <KahootCheckIcon className="h-5 w-5 text-white/95" />
-                            )}
-                          </div>
-                        ))}
+                            );
+                          })}
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="mt-10 grid grid-cols-2 gap-0 overflow-hidden rounded-xl ring-1 ring-white/10 shadow-2xl">
+                  <div className="mt-8 grid grid-cols-2 gap-0 overflow-hidden rounded-xl ring-1 ring-white/10 shadow-2xl flex-none">
                     {options.map((opt, idx) => {
                       const isCorrect = idx === currentQuestion?.correctAnswer;
                       return (
@@ -796,9 +814,10 @@ export default function HostGamePage() {
             })()}
 
             <div className="absolute bottom-0 left-0 right-0">
-              <div className="h-14 bg-gradient-to-r from-purple-950/60 via-indigo-950/60 to-fuchsia-950/60 backdrop-blur ring-1 ring-white/10 px-6 flex items-center justify-between text-white/90">
+              <div className="h-14 bg-linear-to-r from-purple-950/60 via-indigo-950/60 to-fuchsia-950/60 backdrop-blur ring-1 ring-white/10 px-6 flex items-center justify-between text-white/90">
                 <div className="font-semibold tabular-nums">
-                  {Math.max(1, questionIndex - 1)}/{Math.max(1, questionSet.length)}
+                  {Math.max(1, questionIndex - 1)}/
+                  {Math.max(1, questionSet.length)}
                 </div>
                 <div className="font-semibold">
                   <span className="opacity-90">kahoot.it</span>
@@ -806,7 +825,7 @@ export default function HostGamePage() {
                   <span className="opacity-90">Game PIN:</span>{" "}
                   <span className="font-extrabold tracking-wide">{pin}</span>
                 </div>
-                <div className="w-[80px]" />
+                <div className="w-20" />
               </div>
             </div>
           </div>
@@ -956,37 +975,35 @@ export default function HostGamePage() {
     </div>
   );
 
-  return (
-    stage === "lobby" ? (
-      renderLobby()
-    ) : (
-      <div className="min-h-screen bg-[#0f0a1f] text-white">
-        <header className="flex items-center justify-between px-8 py-4 border-b border-white/10 bg-black/30 backdrop-blur">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-xl font-bold">
-              K
-            </div>
-            <div>
-              <p className="text-sm text-purple-200">Host Game</p>
-              <h1 className="text-xl font-semibold">
-                {activeQuizTitle || "…"}
-              </h1>
-            </div>
+  return stage === "lobby" ? (
+    renderLobby()
+  ) : stage === "question" && currentQuestion && showResults ? (
+    renderQuestion()
+  ) : (
+    <div className="min-h-screen bg-[#0f0a1f] text-white">
+      <header className="flex items-center justify-between px-8 py-4 border-b border-white/10 bg-black/30 backdrop-blur">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-linear-to-br from-purple-500 to-pink-500 flex items-center justify-center text-xl font-bold">
+            K
           </div>
-
-          <button
-            onClick={() => router.push("/host")}
-            className="px-4 py-2 rounded-lg text-sm font-semibold border border-white/20 hover:bg-white/10 transition"
-          >
-            Back
-          </button>
-        </header>
-
-        <div className="p-8 space-y-6">
-          {stage === "question" && currentQuestion && renderQuestion()}
-          {stage === "final" && renderFinal()}
+          <div>
+            <p className="text-sm text-purple-200">Host Game</p>
+            <h1 className="text-xl font-semibold">{activeQuizTitle || "…"}</h1>
+          </div>
         </div>
+
+        <button
+          onClick={() => router.push("/host")}
+          className="px-4 py-2 rounded-lg text-sm font-semibold border border-white/20 hover:bg-white/10 transition"
+        >
+          Back
+        </button>
+      </header>
+
+      <div className="p-8 space-y-6">
+        {stage === "question" && currentQuestion && renderQuestion()}
+        {stage === "final" && renderFinal()}
       </div>
-    )
+    </div>
   );
 }

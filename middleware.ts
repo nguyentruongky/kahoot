@@ -9,11 +9,18 @@ export async function middleware(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
 
   // Allow the access page itself to render; otherwise we'd redirect in a loop.
-  if (pathname === "/host/access") {
+  if (pathname === "/host/access" || pathname === "/host/access/") {
     return NextResponse.next();
   }
 
-  const accessUrl = new URL("/host/access", req.url);
+  const accessUrl = req.nextUrl.clone();
+  accessUrl.pathname = "/host/access";
+  accessUrl.search = "";
+  // Ensure redirects use the public scheme/host behind proxies (e.g. Render).
+  const forwardedProto = req.headers.get("x-forwarded-proto");
+  if (forwardedProto === "https") accessUrl.protocol = "https:";
+  const forwardedHost = req.headers.get("x-forwarded-host");
+  if (forwardedHost) accessUrl.host = forwardedHost;
 
   const secret = process.env.HOST_PRIVATE_CODE;
   if (!secret) {

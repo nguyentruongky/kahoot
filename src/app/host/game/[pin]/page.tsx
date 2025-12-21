@@ -1035,7 +1035,55 @@ export default function HostGamePage() {
 
   const renderFinal = () =>
     (() => {
-      const leaderboard = players.slice().sort((a, b) => b.score - a.score);
+      const leaderboard = players
+        .slice()
+        .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
+
+      const leaderboardWithRank = (() => {
+        let lastScore: number | null = null;
+        let lastRank = 0;
+        return leaderboard.map((p, index) => {
+          if (lastScore === null || p.score !== lastScore) {
+            lastRank = index + 1;
+            lastScore = p.score;
+          }
+          return { ...p, rank: lastRank };
+        });
+      })();
+
+      const downloadCsv = () => {
+        const csvEscape = (value: unknown) => {
+          const raw = String(value ?? "");
+          const needsQuotes = /[",\n\r]/.test(raw);
+          const escaped = raw.replace(/"/g, '""');
+          return needsQuotes ? `"${escaped}"` : escaped;
+        };
+
+        const header = ["Rank", "Name", "Score"];
+        const body = leaderboardWithRank.map((p) => [
+          p.rank,
+          p.name,
+          p.score,
+        ]);
+        const csv = [header, ...body]
+          .map((row) => row.map(csvEscape).join(","))
+          .join("\n");
+
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        const safeTitle = (activeQuizTitle || "quiz")
+          .trim()
+          .slice(0, 40)
+          .replace(/[^\w.-]+/g, "_");
+        a.href = url;
+        a.download = `results_${safeTitle || "quiz"}_${pin || "pin"}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      };
+
       const top = leaderboard.slice(0, 3);
       const podium = Array.from({ length: 3 }, (_, idx) => {
         return (
@@ -1079,12 +1127,22 @@ export default function HostGamePage() {
           <div className="absolute inset-0 bg-black/10" />
 
           <div className="relative z-10 mx-auto flex min-h-screen max-w-6xl flex-col px-6 py-8">
-            <button
-              onClick={() => router.push("/host")}
-              className="absolute right-6 top-6 rounded-full bg-black/35 px-4 py-3 text-sm font-semibold text-white/90 ring-1 ring-white/15 hover:bg-black/45"
-            >
-              Back to Host
-            </button>
+            <div className="absolute right-6 top-6 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={downloadCsv}
+                className="rounded-full bg-white/10 px-4 py-3 text-sm font-semibold text-white ring-1 ring-white/15 hover:bg-white/15"
+                title="Download CSV"
+              >
+                Download CSV
+              </button>
+              <button
+                onClick={() => router.push("/host")}
+                className="rounded-full bg-black/35 px-4 py-3 text-sm font-semibold text-white/90 ring-1 ring-white/15 hover:bg-black/45"
+              >
+                Back to Host
+              </button>
+            </div>
 
             <div className="flex flex-1 items-center justify-center py-14">
               <div className="relative w-full">

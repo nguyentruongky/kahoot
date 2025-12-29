@@ -137,7 +137,7 @@ export function PlayerFinalResultsModal({
 
           <button
             onClick={onJoinAnother}
-            className="mt-8 w-full rounded-2xl bg-white text-purple-900 font-extrabold py-3 hover:bg-white/90 transition shadow-[0_10px_0_rgba(0,0,0,0.18)] active:translate-y-0.5 active:shadow-[0_6px_0_rgba(0,0,0,0.18)]"
+            className="mt-8 w-full rounded-2xl bg-white text-purple-900 font-extrabold py-3 hover:bg-white/90 shadow-[0_1px_0_rgba(0,0,0,0.18)] "
           >
             Join Another Game
           </button>

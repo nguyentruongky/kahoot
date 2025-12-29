@@ -26,6 +26,25 @@ export function PlayerQuestionView({
   return (
     <div className="w-full max-w-2xl">
       <div className="bg-white rounded-lg shadow-lg p-6 mb-6 text-center">
+        {question.media?.src && (
+          <div className="mb-5 overflow-hidden rounded-2xl bg-black/5 ring-1 ring-black/10">
+            {question.media.kind === "video" ? (
+              <video
+                src={question.media.src}
+                controls
+                playsInline
+                className="w-full max-h-80 bg-black"
+              />
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={question.media.src}
+                alt="Question media"
+                className="w-full max-h-80 object-contain bg-white"
+              />
+            )}
+          </div>
+        )}
         <h2 className="text-2xl font-bold text-gray-800">{question.text}</h2>
       </div>
 

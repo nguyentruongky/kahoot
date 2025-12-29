@@ -2,6 +2,7 @@ export type Question = {
   text: string;
   options: string[];
   correctAnswer: number | string;
+  media?: { kind: "image" | "video"; src: string; mime?: string };
 };
 
 export type ResultPopupState = {

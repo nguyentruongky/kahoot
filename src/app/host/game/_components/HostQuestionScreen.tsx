@@ -75,6 +75,26 @@ export function HostQuestionScreen({
 
           <div className="mt-4 flex justify-center">
             <div className="w-full max-w-5xl rounded-xl bg-white px-8 py-5 shadow-2xl ring-1 ring-black/10">
+              {postQuestionScreen !== "scoreboard" &&
+                currentQuestion?.media?.src && (
+                  <div className="mb-4 overflow-hidden rounded-2xl bg-black/5 ring-1 ring-black/10">
+                    {currentQuestion.media.kind === "video" ? (
+                      <video
+                        src={currentQuestion.media.src}
+                        controls
+                        playsInline
+                        className="w-full max-h-64 bg-black"
+                      />
+                    ) : (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={currentQuestion.media.src}
+                        alt="Question media"
+                        className="w-full max-h-64 object-contain bg-white"
+                      />
+                    )}
+                  </div>
+                )}
               <h2 className="text-center text-4xl font-extrabold tracking-tight text-gray-900">
                 {postQuestionScreen === "scoreboard"
                   ? "Scoreboard"
@@ -279,6 +299,26 @@ export function HostQuestionScreen({
                   <p className="text-base font-semibold text-gray-500">
                     Question {questionIndex - 1} of {questionSetLength}
                   </p>
+
+                  {currentQuestion?.media?.src && (
+                    <div className="w-full max-w-4xl overflow-hidden rounded-3xl bg-black/5 ring-1 ring-black/10">
+                      {currentQuestion.media.kind === "video" ? (
+                        <video
+                          src={currentQuestion.media.src}
+                          controls
+                          playsInline
+                          className="w-full max-h-[360px] bg-black"
+                        />
+                      ) : (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={currentQuestion.media.src}
+                          alt="Question media"
+                          className="w-full max-h-[360px] object-contain bg-white"
+                        />
+                      )}
+                    </div>
+                  )}
 
                   <div className="flex flex-col items-center gap-3">
                     <div className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-purple-200 text-3xl font-black tabular-nums text-purple-700">

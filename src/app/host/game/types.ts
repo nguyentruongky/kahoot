@@ -7,6 +7,7 @@ export type QuizQuestion = {
   text: string;
   options: string[];
   correctAnswer: number;
+  media?: { kind: "image" | "video"; src: string; mime?: string };
 };
 
 export type PlayerAnswerPayload = {

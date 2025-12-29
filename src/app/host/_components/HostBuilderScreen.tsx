@@ -11,10 +11,12 @@ type EditableQuestion = {
   text: string;
   options: string[];
   correctAnswer: number;
+  media?: { kind: "image" | "video"; src: string; mime?: string };
 };
 
 type HostBuilderScreenProps = {
   fileInputRef: RefObject<HTMLInputElement | null>;
+  mediaInputRef?: RefObject<HTMLInputElement | null>;
   builderTitle: string;
   builderQuestions: EditableQuestion[];
   builderIndex: number;
@@ -24,12 +26,14 @@ type HostBuilderScreenProps = {
   onUpdateQuestionText: (text: string) => void;
   onUpdateOption: (optionIndex: number, value: string) => void;
   onSelectCorrect: (optionIndex: number) => void;
+  onSetMedia: (media?: EditableQuestion["media"]) => void;
   onCancel: () => void;
   onSave: () => void;
 };
 
 export function HostBuilderScreen({
   fileInputRef,
+  mediaInputRef,
   builderTitle,
   builderQuestions,
   builderIndex,
@@ -39,6 +43,7 @@ export function HostBuilderScreen({
   onUpdateQuestionText,
   onUpdateOption,
   onSelectCorrect,
+  onSetMedia,
   onCancel,
   onSave,
 }: HostBuilderScreenProps) {
@@ -124,13 +129,55 @@ export function HostBuilderScreen({
               placeholder="Type your question..."
             />
 
-            <div className="mt-6 h-48 border-2 border-dashed border-gray-300 rounded-2xl flex flex-col items-center justify-center text-gray-500">
-              <span className="text-2xl mb-2">🖼️</span>
-              <p className="font-semibold">Drop image or video here</p>
-              <p className="text-sm">You can drag and drop or click to upload.</p>
-              <button className="mt-4 px-4 py-2 rounded-lg bg-white border border-gray-300 text-gray-700">
-                Upload Media
-              </button>
+            <div className="mt-6 rounded-2xl border-2 border-dashed border-gray-300 bg-white/60 p-5">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-2">
+                  {active?.media && (
+                    <button
+                      type="button"
+                      onClick={() => onSetMedia(undefined)}
+                      className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {active?.media ? (
+                <div className="mt-5 overflow-hidden rounded-2xl bg-black/5 ring-1 ring-black/10">
+                  {active.media.kind === "image" ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={active.media.src}
+                      alt="Question media"
+                      className="w-full max-h-72 object-contain bg-white"
+                    />
+                  ) : (
+                    <video
+                      src={active.media.src}
+                      controls
+                      playsInline
+                      className="w-full max-h-72 bg-black"
+                    />
+                  )}
+                </div>
+              ) : (
+                <div className="mt-5 h-48 rounded-2xl  flex flex-col items-center justify-center text-gray-500">
+                  <span className="text-2xl mb-2">🖼️</span>
+                  <p className="font-semibold">Drop image or video here</p>
+                  <p className="text-sm">
+                    You can drag and drop or click to upload.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => mediaInputRef?.current?.click()}
+                    className="mt-4 px-4 py-2 rounded-lg bg-white border border-gray-300 text-gray-700"
+                  >
+                    Upload Media
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -182,4 +229,3 @@ export function HostBuilderScreen({
     </div>
   );
 }
-

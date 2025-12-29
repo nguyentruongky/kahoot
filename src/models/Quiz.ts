@@ -4,6 +4,11 @@ const QuestionSchema = new mongoose.Schema({
   text: { type: String, required: true },
   options: { type: [String], required: true },
   correctAnswer: { type: Number, required: true }, // 0-based index into `options`
+  media: {
+    kind: { type: String, enum: ["image", "video"], required: false },
+    src: { type: String, required: false },
+    mime: { type: String, required: false },
+  },
 });
 
 const QuizSchema = new mongoose.Schema({

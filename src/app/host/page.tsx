@@ -22,6 +22,7 @@ type EditableQuestion = {
   text: string;
   options: string[];
   correctAnswer: number;
+  media?: { kind: "image" | "video"; src: string; mime?: string };
 };
 
 export default function HostPage() {
@@ -61,6 +62,7 @@ export default function HostPage() {
 
   // FILE IMPORT
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const mediaInputRef = useRef<HTMLInputElement>(null);
   const [copyToast, setCopyToast] = useState("");
 
   const refreshQuizzes = () => {
@@ -137,42 +139,50 @@ export default function HostPage() {
       return 0;
     };
 
-    const questions: EditableQuestion[] = questionsSource
-      .map((q) => {
-        if (!q || typeof q !== "object") return null;
-        const obj = q as Record<string, unknown>;
+    const questions: EditableQuestion[] = [];
+    for (const q of questionsSource) {
+      if (!q || typeof q !== "object") continue;
+      const obj = q as Record<string, unknown>;
 
-        const text =
-          (typeof obj.text === "string" && obj.text) ||
-          (typeof obj.question === "string" && obj.question) ||
-          (typeof obj.prompt === "string" && obj.prompt) ||
-          "Untitled question";
+      const text =
+        (typeof obj.text === "string" && obj.text) ||
+        (typeof obj.question === "string" && obj.question) ||
+        (typeof obj.prompt === "string" && obj.prompt) ||
+        "Untitled question";
 
-        const options = normalizeOptions(obj.options ?? obj.choices);
+      const options = normalizeOptions(obj.options ?? obj.choices);
 
-        let correctAnswer = 0;
-        if (typeof obj.correctAnswer !== "undefined") {
-          correctAnswer = normalizeCorrectIndex(
-            obj.correctAnswer,
-            options.length
-          );
-        } else if (typeof obj.answerIndex !== "undefined") {
-          correctAnswer = normalizeCorrectIndex(
-            obj.answerIndex,
-            options.length
-          );
-        } else if (typeof obj.answer !== "undefined") {
-          if (typeof obj.answer === "string") {
-            const idx = options.findIndex((opt) => opt === obj.answer);
-            correctAnswer = idx >= 0 ? idx : 0;
-          } else {
-            correctAnswer = normalizeCorrectIndex(obj.answer, options.length);
-          }
+      let correctAnswer = 0;
+      if (typeof obj.correctAnswer !== "undefined") {
+        correctAnswer = normalizeCorrectIndex(obj.correctAnswer, options.length);
+      } else if (typeof obj.answerIndex !== "undefined") {
+        correctAnswer = normalizeCorrectIndex(obj.answerIndex, options.length);
+      } else if (typeof obj.answer !== "undefined") {
+        if (typeof obj.answer === "string") {
+          const idx = options.findIndex((opt) => opt === obj.answer);
+          correctAnswer = idx >= 0 ? idx : 0;
+        } else {
+          correctAnswer = normalizeCorrectIndex(obj.answer, options.length);
         }
+      }
 
-        return { text, options, correctAnswer };
-      })
-      .filter((q): q is EditableQuestion => Boolean(q));
+      const media =
+        obj.media && typeof obj.media === "object"
+          ? (obj.media as { kind?: unknown; src?: unknown; mime?: unknown })
+          : null;
+      const kind =
+        media?.kind === "image" || media?.kind === "video"
+          ? (media.kind as "image" | "video")
+          : null;
+      const src = typeof media?.src === "string" ? media.src : "";
+      const mime = typeof media?.mime === "string" ? media.mime : undefined;
+
+      if (kind && src) {
+        questions.push({ text, options, correctAnswer, media: { kind, src, mime } });
+      } else {
+        questions.push({ text, options, correctAnswer });
+      }
+    }
 
     if (questions.length === 0) {
       throw new Error("No valid questions found in JSON.");
@@ -389,6 +399,7 @@ export default function HostPage() {
         text: q.text,
         options: q.options,
         correctAnswer: Number(q.correctAnswer) || 0,
+        media: q.media,
       }))
     );
     setBuilderIndex(0);
@@ -414,6 +425,7 @@ export default function HostPage() {
       text: q.text,
       options: q.options,
       correctAnswer: q.correctAnswer,
+      media: q.media,
     }));
 
     const url = builderQuizId
@@ -462,6 +474,7 @@ export default function HostPage() {
     builder: (
       <HostBuilderScreen
         fileInputRef={fileInputRef}
+        mediaInputRef={mediaInputRef}
         builderTitle={builderTitle}
         builderQuestions={builderQuestions}
         builderIndex={builderIndex}
@@ -493,6 +506,11 @@ export default function HostPage() {
         onSelectCorrect={(optionIndex) =>
           setBuilderQuestions((prev) =>
             prev.map((q, i) => (i === builderIndex ? { ...q, correctAnswer: optionIndex } : q))
+          )
+        }
+        onSetMedia={(media) =>
+          setBuilderQuestions((prev) =>
+            prev.map((q, i) => (i === builderIndex ? { ...q, media } : q))
           )
         }
         onCancel={() => setStage("dashboard")}
@@ -535,6 +553,42 @@ export default function HostPage() {
   // RENDER ROOT
   return (
     <div className="min-h-screen bg-[#0f0a1f] text-white">
+      <input
+        ref={mediaInputRef}
+        type="file"
+        accept="image/*,video/*"
+        className="hidden"
+        onChange={async (e) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+          try {
+            const maxBytes = 8 * 1024 * 1024;
+            if (file.size > maxBytes) {
+              alert("Media is too large (max 8MB).");
+              return;
+            }
+
+            const dataUrl = await new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onerror = () => reject(new Error("read failed"));
+              reader.onload = () => resolve(String(reader.result || ""));
+              reader.readAsDataURL(file);
+            });
+
+            const kind = file.type.startsWith("video/") ? "video" : "image";
+            setBuilderQuestions((prev) =>
+              prev.map((q, i) =>
+                i === builderIndex
+                  ? { ...q, media: { kind, src: dataUrl, mime: file.type } }
+                  : q
+              )
+            );
+          } finally {
+            e.target.value = "";
+          }
+        }}
+      />
+
       <HostJsonImportInput
         inputRef={fileInputRef}
         onImportText={async (text) => {

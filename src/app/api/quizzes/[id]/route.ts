@@ -11,6 +11,20 @@ type IncomingQuestion = {
   correctAnswer?: unknown;
   answerIndex?: unknown;
   answer?: unknown;
+  media?: unknown;
+};
+
+type MediaPayload = { kind: "image" | "video"; src: string; mime?: string };
+
+const normalizeMedia = (raw: unknown): MediaPayload | undefined => {
+  if (!raw || typeof raw !== "object") return undefined;
+  const obj = raw as { kind?: unknown; src?: unknown; mime?: unknown };
+  const kind =
+    obj.kind === "image" || obj.kind === "video" ? obj.kind : undefined;
+  const src = typeof obj.src === "string" ? obj.src.trim() : "";
+  const mime = typeof obj.mime === "string" ? obj.mime.trim() : undefined;
+  if (!kind || !src) return undefined;
+  return { kind, src, mime };
 };
 
 const normalizeCorrectAnswer = (
@@ -57,7 +71,17 @@ const normalizeQuizBody = (raw: unknown) => {
   }
 
   const questions = body.questions
-    .map((q): { text: string; options: string[]; correctAnswer: number } | null => {
+    .map(
+      (
+        q
+      ):
+        | {
+            text: string;
+            options: string[];
+            correctAnswer: number;
+            media?: MediaPayload;
+          }
+        | null => {
       if (!q || typeof q !== "object") return null;
       const item = q as IncomingQuestion;
 
@@ -85,12 +109,19 @@ const normalizeQuizBody = (raw: unknown) => {
             : item.answer;
 
       const correctAnswer = normalizeCorrectAnswer(candidate, options);
+      const media = normalizeMedia(item.media);
 
-      return { text, options, correctAnswer };
+      return { text, options, correctAnswer, media };
     })
     .filter(
-      (q): q is { text: string; options: string[]; correctAnswer: number } =>
-        Boolean(q)
+      (
+        q
+      ): q is {
+        text: string;
+        options: string[];
+        correctAnswer: number;
+        media?: MediaPayload;
+      } => Boolean(q)
     );
 
   if (questions.length === 0) {
@@ -112,6 +143,7 @@ const toClientQuiz = (quiz: any) => {
       text: String(q.text ?? ""),
       options,
       correctAnswer: normalizeCorrectAnswer(q.correctAnswer, options),
+      media: normalizeMedia(q.media),
     };
   };
 

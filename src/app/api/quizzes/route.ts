@@ -1,4 +1,5 @@
 import { connectDB } from "@/lib/db";
+import { getAuthUser } from "@/lib/authServer";
 import Quiz from "@/models/Quiz";
 import { NextResponse } from "next/server";
 
@@ -123,17 +124,25 @@ const toClientQuiz = (quiz: any) => {
 };
 
 export async function GET() {
+  const user = await getAuthUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   await connectDB();
-  const quizzes = await Quiz.find().lean();
+  const quizzes = await Quiz.find({ ownerId: user.id }).lean();
   return NextResponse.json(quizzes.map(toClientQuiz));
 }
 
 export async function POST(req: Request) {
+  const user = await getAuthUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   await connectDB();
   try {
     const raw = (await req.json()) as unknown;
     const body = normalizeQuizBody(raw);
-    const newQuiz = await Quiz.create(body);
+    const newQuiz = await Quiz.create({ ...body, ownerId: user.id });
     return NextResponse.json(toClientQuiz(newQuiz.toObject()), { status: 201 });
   } catch (error) {
     return NextResponse.json(

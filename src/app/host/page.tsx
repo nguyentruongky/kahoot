@@ -27,7 +27,7 @@ type EditableQuestion = {
 export default function HostPage() {
   const router = useRouter();
   const endQuestionSentRef = useRef(false);
-
+  
   // STAGES
   const [stage, setStage] = useState<HostStage>("dashboard");
 

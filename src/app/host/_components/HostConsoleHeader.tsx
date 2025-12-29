@@ -19,10 +19,7 @@ export function HostConsoleHeader({
         <div className="w-10 h-10 rounded-xl bg-linear-to-br from-purple-500 to-pink-500 flex items-center justify-center text-xl font-bold">
           K
         </div>
-        <div>
-          <p className="text-sm text-purple-200">Host Console</p>
-          <h1 className="text-xl font-semibold">Kahoot Clone</h1>
-        </div>
+       
       </div>
 
       <div className="flex items-center gap-2">

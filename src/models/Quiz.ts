@@ -9,6 +9,7 @@ const QuestionSchema = new mongoose.Schema({
 const QuizSchema = new mongoose.Schema({
   title: { type: String, required: true },
   questions: { type: [QuestionSchema], required: true },
+  ownerId: { type: mongoose.Schema.Types.ObjectId, ref: "User", index: true },
 });
 
 if (mongoose.models.Quiz) {

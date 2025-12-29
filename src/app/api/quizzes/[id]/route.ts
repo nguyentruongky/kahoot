@@ -1,4 +1,5 @@
 import { connectDB } from "@/lib/db";
+import { getAuthUser } from "@/lib/authServer";
 import Quiz from "@/models/Quiz";
 import { NextResponse } from "next/server";
 
@@ -126,9 +127,13 @@ export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const user = await getAuthUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   await connectDB();
   const { id } = await params;
-  const quiz = await Quiz.findById(id).lean();
+  const quiz = await Quiz.findOne({ _id: id, ownerId: user.id }).lean();
 
   if (!quiz) {
     return NextResponse.json({ error: "Quiz not found" }, { status: 404 });
@@ -141,6 +146,10 @@ export async function PUT(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const user = await getAuthUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   await connectDB();
   const { id } = await params;
 
@@ -148,7 +157,7 @@ export async function PUT(
     const raw = (await req.json()) as unknown;
     const body = normalizeQuizBody(raw);
 
-    const updated = await Quiz.findByIdAndUpdate(id, body, {
+    const updated = await Quiz.findOneAndUpdate({ _id: id, ownerId: user.id }, body, {
       new: true,
       runValidators: true,
     });
@@ -170,10 +179,14 @@ export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const user = await getAuthUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   await connectDB();
   const { id } = await params;
 
-  const deleted = await Quiz.findByIdAndDelete(id);
+  const deleted = await Quiz.findOneAndDelete({ _id: id, ownerId: user.id });
   if (!deleted) {
     return NextResponse.json({ error: "Quiz not found" }, { status: 404 });
   }

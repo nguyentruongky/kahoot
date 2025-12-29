@@ -1,5 +1,9 @@
 "use client";
 
+import { useHostAuthUser } from "@/app/host/_components/HostAuthProvider";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+
 type HostDashboardScreenProps = {
   searchTerm: string;
   onSearchTermChange: (value: string) => void;
@@ -21,16 +25,68 @@ export function HostDashboardScreen({
   onPlayQuiz,
   onDeleteQuiz,
 }: HostDashboardScreenProps) {
+  const user = useHostAuthUser();
+  const router = useRouter();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const logout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } finally {
+      setMenuOpen(false);
+      router.push("/login");
+      router.refresh();
+    }
+  };
+
   return (
     <div className="grid grid-cols-12 gap-8">
       <aside className="col-span-3 bg-white/5 rounded-2xl p-6 border border-white/10">
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 rounded-full bg-linear-to-br from-purple-400 to-indigo-500 flex items-center justify-center text-lg font-bold">
-            H
+          <div
+            className="relative"
+            onBlur={(e) => {
+              if (!(e.currentTarget as HTMLDivElement).contains(
+                e.relatedTarget as Node | null
+              )) {
+                setMenuOpen(false);
+              }
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setMenuOpen((v) => !v)}
+              className="w-12 h-12 rounded-full bg-linear-to-br from-purple-400 to-indigo-500 flex items-center justify-center text-lg font-bold"
+              aria-label="Account menu"
+              aria-haspopup="menu"
+              aria-expanded={menuOpen}
+            >
+              K
+            </button>
+
+            {menuOpen && (
+              <div
+                role="menu"
+                className="absolute left-0 top-full mt-2 w-48 rounded-2xl bg-black/80 p-2 ring-1 ring-white/15 shadow-2xl backdrop-blur"
+              >
+                <div className="px-3 py-2 text-xs text-white/70 truncate">
+                  {user.email}
+                </div>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={logout}
+                  className="w-full rounded-xl px-3 py-2 text-left text-sm font-semibold text-white hover:bg-white/10"
+                >
+                  Log out
+                </button>
+              </div>
+            )}
           </div>
           <div>
-            <p className="text-sm text-purple-200">Host Account</p>
-            <p className="font-semibold text-white">Welcome back!</p>
+            <p className="text-sm text-purple-200">Welcome back,</p>
+            <p className="font-semibold text-white truncate">{user.email}</p>
           </div>
         </div>
 
@@ -102,4 +158,3 @@ export function HostDashboardScreen({
     </div>
   );
 }
-

@@ -9,7 +9,10 @@ import type {
   PlayerAnswerPayload,
   QuizQuestion,
 } from "@/app/host/game/types";
-import { WINTER_BG_CLASS } from "@/app/host/game/constants";
+import {
+  GAME_BACKGROUND_CLASS,
+  GAME_BACKGROUND_STYLE,
+} from "@/app/host/game/constants";
 import { mergePlayers } from "@/app/host/game/utils";
 import { HostLobbyScreen } from "@/app/host/game/_components/HostLobbyScreen";
 import { HostQuestionScreen } from "@/app/host/game/_components/HostQuestionScreen";
@@ -381,7 +384,10 @@ export default function HostGamePage() {
   };
 
   const fallbackScreen = (
-    <div className={`min-h-screen text-white ${WINTER_BG_CLASS}`}>
+    <div
+      className={`min-h-screen text-white ${GAME_BACKGROUND_CLASS}`}
+      style={GAME_BACKGROUND_STYLE}
+    >
       <header className="flex items-center justify-between border-b border-white/10 bg-black/30 px-8 py-4 backdrop-blur">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-purple-500 to-pink-500 text-xl font-bold">
@@ -408,22 +414,23 @@ export default function HostGamePage() {
   const screens = {
     lobby: (
       <HostLobbyScreen
-        backgroundClassName={WINTER_BG_CLASS}
+        backgroundClassName={GAME_BACKGROUND_CLASS}
+        backgroundStyle={GAME_BACKGROUND_STYLE}
         activeQuizTitle={activeQuizTitle}
         pin={pin}
         joinDisplayUrl={joinDisplayUrl}
         joinLinkCopyState={joinLinkCopyState}
         players={players}
         startEnabled={startEnabled}
-        onExit={cancelAndExit}
-        onEndGame={requestEndGame}
+        onClose={cancelAndExit}
         onStart={nextQuestion}
         onCopyJoinLink={copyJoinLink}
       />
     ),
     question: currentQuestion ? (
       <HostQuestionScreen
-        backgroundClassName={WINTER_BG_CLASS}
+        backgroundClassName={GAME_BACKGROUND_CLASS}
+        backgroundStyle={GAME_BACKGROUND_STYLE}
         showResults={showResults}
         postQuestionScreen={postQuestionScreen}
         currentQuestion={currentQuestion}
@@ -440,7 +447,8 @@ export default function HostGamePage() {
     ) : null,
     final: (
       <HostFinalScreen
-        backgroundClassName={WINTER_BG_CLASS}
+        backgroundClassName={GAME_BACKGROUND_CLASS}
+        backgroundStyle={GAME_BACKGROUND_STYLE}
         activeQuizTitle={activeQuizTitle}
         pin={pin}
         players={players}

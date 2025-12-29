@@ -1,10 +1,12 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import type { Player } from "@/app/host/game/types";
 import { avatarForName } from "@/app/host/game/utils";
 
 type HostFinalScreenProps = {
   backgroundClassName: string;
+  backgroundStyle?: CSSProperties;
   activeQuizTitle: string;
   pin: string;
   players: Player[];
@@ -13,6 +15,7 @@ type HostFinalScreenProps = {
 
 export function HostFinalScreen({
   backgroundClassName,
+  backgroundStyle,
   activeQuizTitle,
   pin,
   players,
@@ -102,6 +105,7 @@ export function HostFinalScreen({
   return (
     <div
       className={`relative min-h-screen overflow-hidden text-white ${backgroundClassName}`}
+      style={backgroundStyle}
     >
       <div className="absolute inset-0 bg-black/10" />
 

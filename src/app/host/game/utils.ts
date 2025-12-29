@@ -1,4 +1,5 @@
 import type { Player } from "@/app/host/game/types";
+import { avatarForName } from "@/lib/avatar";
 
 export function mergePlayers(incoming: Player[], previous: Player[]) {
   const scoreMap = new Map(previous.map((p) => [p.name, p.score]));
@@ -15,40 +16,4 @@ export function mergePlayers(incoming: Player[], previous: Player[]) {
   }, []);
 }
 
-export function avatarForName(name: string) {
-  const avatars = [
-    "🐶",
-    "🐱",
-    "🐭",
-    "🐹",
-    "🐰",
-    "🦊",
-    "🐻",
-    "🐼",
-    "🐻‍❄️",
-    "🐨",
-    "🐯",
-    "🦁",
-    "🐮",
-    "🐷",
-    "🐸",
-    "🐵",
-    "🐔",
-    "🐧",
-    "🐦",
-    "🦉",
-    "🦄",
-    "🐝",
-    "🦋",
-    "🐢",
-    "🦖",
-    "🐙",
-    "🦀",
-    "🐬",
-    "🦈",
-    "🦦",
-    "🦔",
-  ];
-  const hash = name.split("").reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
-  return avatars[hash % avatars.length];
-}
+export { avatarForName };

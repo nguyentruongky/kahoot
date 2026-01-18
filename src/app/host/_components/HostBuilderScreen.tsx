@@ -7,6 +7,7 @@ import {
   QuizzaShapeIcon,
 } from "@/components/QuizzaShapeIcon";
 import { padOptions, trimTrailingEmptyOptions } from "@/lib/quizDefaults";
+import { BACKGROUND_BASE_CLASS, backgroundStyle } from "@/lib/backgrounds";
 
 type EditableQuestion = {
   text: string;
@@ -18,10 +19,13 @@ type EditableQuestion = {
 type HostBuilderScreenProps = {
   fileInputRef: RefObject<HTMLInputElement | null>;
   mediaInputRef?: RefObject<HTMLInputElement | null>;
+  backgroundInputRef?: RefObject<HTMLInputElement | null>;
   builderTitle: string;
+  builderBackgroundImage?: string;
   builderQuestions: EditableQuestion[];
   builderIndex: number;
   onBuilderTitleChange: (value: string) => void;
+  onSetBackgroundImage: (value?: string) => void;
   onSelectQuestion: (index: number) => void;
   onAddQuestion: () => void;
   onDeleteQuestion: (index: number) => void;
@@ -39,10 +43,13 @@ type HostBuilderScreenProps = {
 export function HostBuilderScreen({
   fileInputRef,
   mediaInputRef,
+  backgroundInputRef,
   builderTitle,
+  builderBackgroundImage,
   builderQuestions,
   builderIndex,
   onBuilderTitleChange,
+  onSetBackgroundImage,
   onSelectQuestion,
   onAddQuestion,
   onDeleteQuestion,
@@ -63,8 +70,11 @@ export function HostBuilderScreen({
   const optionEntries = optionsForEdit.map((opt, index) => ({ opt, index }));
 
   return (
-    <div className="bg-white text-gray-900 rounded-3xl shadow-2xl overflow-hidden flex flex-col min-h-[600px] max-h-[calc(100vh-8rem)]">
-      <div className="flex items-center justify-between px-8 py-5 border-b shrink-0">
+    <div
+      className={`rounded-3xl shadow-2xl overflow-hidden flex flex-col min-h-[600px] max-h-[calc(100vh-8rem)] ${BACKGROUND_BASE_CLASS}`}
+      style={backgroundStyle(builderBackgroundImage)}
+    >
+      <div className="flex items-center justify-between px-8 py-5 border-b shrink-0 bg-white/95 backdrop-blur text-gray-900">
         <div className="flex items-center gap-3 w-1/2">
           <div className="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center font-bold">
             ✦
@@ -120,8 +130,8 @@ export function HostBuilderScreen({
         </div>
       </div>
 
-      <div className="grid grid-cols-12 flex-1 min-h-0">
-        <aside className="col-span-3 border-r bg-gray-50 p-6 space-y-4 min-h-0 overflow-y-auto">
+      <div className="grid grid-cols-12 flex-1 min-h-0 bg-white/85 backdrop-blur text-gray-900">
+        <aside className="col-span-3 border-r bg-white/80 p-6 space-y-4 min-h-0 overflow-y-auto">
           <p className="text-sm text-gray-500 uppercase tracking-wide">
             Questions
           </p>
@@ -162,6 +172,47 @@ export function HostBuilderScreen({
         </aside>
 
         <main className="col-span-9 p-8 space-y-6 min-h-0 overflow-y-auto">
+          <div className="rounded-2xl border border-gray-200 bg-white p-5">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Quiz background
+                </h3>
+                <p className="text-sm text-gray-500">
+                  Use a photo that frames your questions and lobby.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                {builderBackgroundImage ? (
+                  <button
+                    type="button"
+                    onClick={() => onSetBackgroundImage(undefined)}
+                    className="px-3 py-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50"
+                  >
+                    Remove
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={() => backgroundInputRef?.current?.click()}
+                  className="px-4 py-2 rounded-lg bg-purple-600 text-white font-semibold"
+                >
+                  Upload
+                </button>
+              </div>
+            </div>
+            <div
+              className={`mt-4 h-44 w-full overflow-hidden rounded-2xl border border-dashed border-gray-300 bg-gray-50 ${BACKGROUND_BASE_CLASS}`}
+              style={backgroundStyle(builderBackgroundImage)}
+            >
+              {!builderBackgroundImage ? (
+                <div className="flex h-full w-full items-center justify-center text-gray-500">
+                  <span className="text-sm">No background selected</span>
+                </div>
+              ) : null}
+            </div>
+          </div>
+
           <div className="bg-gray-100 rounded-2xl p-6">
             <input
               value={active?.text || ""}

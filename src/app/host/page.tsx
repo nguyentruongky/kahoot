@@ -58,6 +58,9 @@ export default function HostPage() {
 
   // BUILDER
   const [builderTitle, setBuilderTitle] = useState("");
+  const [builderBackgroundImage, setBuilderBackgroundImage] = useState<
+    string | undefined
+  >(undefined);
   const [builderQuizId, setBuilderQuizId] = useState<string | null>(null);
   const [builderQuestions, setBuilderQuestions] = useState<EditableQuestion[]>([
     { text: "Untitled question", options: ["", "", "", ""], correctAnswer: 0 },
@@ -73,6 +76,7 @@ export default function HostPage() {
   // FILE IMPORT
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaInputRef = useRef<HTMLInputElement>(null);
+  const backgroundInputRef = useRef<HTMLInputElement>(null);
   const [copyToast, setCopyToast] = useState("");
 
   const refreshQuizzes = () => {
@@ -108,7 +112,11 @@ export default function HostPage() {
   const normalizeImportedQuestions = (raw: unknown) => {
     const payload =
       raw && typeof raw === "object" && "questions" in raw
-        ? (raw as { questions: unknown; title?: unknown })
+        ? (raw as {
+            questions: unknown;
+            title?: unknown;
+            backgroundImage?: unknown;
+          })
         : null;
 
     const questionsSource = Array.isArray(raw)
@@ -202,6 +210,10 @@ export default function HostPage() {
       title:
         payload && typeof payload.title === "string"
           ? payload.title
+          : undefined,
+      backgroundImage:
+        payload && typeof payload.backgroundImage === "string"
+          ? payload.backgroundImage
           : undefined,
       questions,
     };
@@ -318,6 +330,11 @@ export default function HostPage() {
       const parsed = JSON.parse(text) as unknown;
       const { title, questions } = normalizeImportedQuestions(parsed);
       if (title) setBuilderTitle(title);
+      setBuilderBackgroundImage(
+        typeof backgroundImage === "string" && backgroundImage.trim()
+          ? backgroundImage
+          : undefined
+      );
       setBuilderQuestions(questions);
       setBuilderIndex(0);
       setBuilderQuizId(null);
@@ -337,6 +354,7 @@ export default function HostPage() {
       setBuilderQuestions(questions);
       setBuilderIndex(0);
       setBuilderQuizId(null);
+      setBuilderBackgroundImage(undefined);
       deletedQuestionStackRef.current = [];
       setDeletedQuestionStackSize(0);
       setStage("builder");
@@ -562,6 +580,9 @@ export default function HostPage() {
 
     setBuilderQuizId(quizId);
     setBuilderTitle(quiz.title || "Untitled Quiz");
+    setBuilderBackgroundImage(
+      typeof quiz.backgroundImage === "string" ? quiz.backgroundImage : undefined
+    );
     setBuilderQuestions(
       (quiz.questions || []).map((q: any) => ({
         text: q.text,
@@ -579,6 +600,7 @@ export default function HostPage() {
   const createNewQuiz = () => {
     setBuilderQuizId(null);
     setBuilderTitle("New Quiz");
+    setBuilderBackgroundImage(undefined);
     setBuilderQuestions([
       {
         text: "Untitled question",
@@ -677,6 +699,7 @@ export default function HostPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         title: builderTitle,
+        backgroundImage: builderBackgroundImage ?? null,
         questions: sanitized,
       }),
     });
@@ -714,10 +737,13 @@ export default function HostPage() {
       <HostBuilderScreen
         fileInputRef={fileInputRef}
         mediaInputRef={mediaInputRef}
+        backgroundInputRef={backgroundInputRef}
         builderTitle={builderTitle}
+        builderBackgroundImage={builderBackgroundImage}
         builderQuestions={builderQuestions}
         builderIndex={builderIndex}
         onBuilderTitleChange={setBuilderTitle}
+        onSetBackgroundImage={setBuilderBackgroundImage}
         onSelectQuestion={setBuilderIndex}
         onAddQuestion={() =>
           setBuilderQuestions((prev) => [
@@ -831,6 +857,34 @@ export default function HostPage() {
                   : q
               )
             );
+          } finally {
+            e.target.value = "";
+          }
+        }}
+      />
+      <input
+        ref={backgroundInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={async (e) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+          try {
+            const maxBytes = 5 * 1024 * 1024;
+            if (file.size > maxBytes) {
+              alert("Background image is too large (max 5MB).");
+              return;
+            }
+
+            const dataUrl = await new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onerror = () => reject(new Error("read failed"));
+              reader.onload = () => resolve(String(reader.result || ""));
+              reader.readAsDataURL(file);
+            });
+
+            setBuilderBackgroundImage(dataUrl);
           } finally {
             e.target.value = "";
           }

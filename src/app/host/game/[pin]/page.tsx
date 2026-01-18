@@ -10,9 +10,10 @@ import type {
   QuizQuestion,
 } from "@/app/host/game/types";
 import {
-  GAME_BACKGROUND_CLASS,
-  GAME_BACKGROUND_STYLE,
-} from "@/app/host/game/constants";
+  BACKGROUND_BASE_CLASS,
+  DEFAULT_BACKGROUND_IMAGE,
+  backgroundStyle,
+} from "@/lib/backgrounds";
 import { mergePlayers } from "@/app/host/game/utils";
 import { HostLobbyScreen } from "@/app/host/game/_components/HostLobbyScreen";
 import { HostQuestionScreen } from "@/app/host/game/_components/HostQuestionScreen";
@@ -35,6 +36,9 @@ export default function HostGamePage() {
   const [questionIndex, setQuestionIndex] = useState(0);
   const [currentQuestion, setCurrentQuestion] = useState<QuizQuestion | null>(
     null
+  );
+  const [backgroundImage, setBackgroundImage] = useState<string | undefined>(
+    DEFAULT_BACKGROUND_IMAGE
   );
   const [answers, setAnswers] = useState<PlayerAnswerPayload[]>([]);
   const [timer, setTimer] = useState(20);
@@ -151,8 +155,11 @@ export default function HostGamePage() {
           return;
         }
 
-        const quizData: { title?: string; questions?: QuizQuestion[] } =
-          await quizRes.json();
+        const quizData: {
+          title?: string;
+          questions?: QuizQuestion[];
+          backgroundImage?: string;
+        } = await quizRes.json();
         const questions = quizData.questions ?? [];
 
         if (questions.length === 0) {
@@ -163,6 +170,12 @@ export default function HostGamePage() {
 
         if (cancelled) return;
         setActiveQuizTitle(quizData.title || "Quiz");
+        setBackgroundImage(
+          typeof quizData.backgroundImage === "string" &&
+            quizData.backgroundImage.trim()
+            ? quizData.backgroundImage
+            : undefined
+        );
         setQuestionSet(questions);
         setQuestionIndex(1);
       } catch (error) {
@@ -409,10 +422,15 @@ export default function HostGamePage() {
     nextQuestion();
   };
 
+  const activeBackgroundStyle = backgroundStyle(
+    backgroundImage || DEFAULT_BACKGROUND_IMAGE
+  );
+  const backgroundClassName = BACKGROUND_BASE_CLASS;
+
   const fallbackScreen = (
     <div
-      className={`min-h-screen text-white ${GAME_BACKGROUND_CLASS}`}
-      style={GAME_BACKGROUND_STYLE}
+      className={`min-h-screen text-white ${backgroundClassName}`}
+      style={activeBackgroundStyle}
     >
       <header className="flex items-center justify-between border-b border-white/10 bg-black/30 px-8 py-4 backdrop-blur">
         <div className="flex items-center gap-3">
@@ -440,8 +458,8 @@ export default function HostGamePage() {
   const screens = {
     lobby: (
       <HostLobbyScreen
-        backgroundClassName={GAME_BACKGROUND_CLASS}
-        backgroundStyle={GAME_BACKGROUND_STYLE}
+        backgroundClassName={backgroundClassName}
+        backgroundStyle={activeBackgroundStyle}
         activeQuizTitle={activeQuizTitle}
         pin={pin}
         joinDisplayUrl={joinDisplayUrl}
@@ -455,8 +473,8 @@ export default function HostGamePage() {
     ),
     question: currentQuestion ? (
       <HostQuestionScreen
-        backgroundClassName={GAME_BACKGROUND_CLASS}
-        backgroundStyle={GAME_BACKGROUND_STYLE}
+        backgroundClassName={backgroundClassName}
+        backgroundStyle={activeBackgroundStyle}
         showResults={showResults}
         postQuestionScreen={postQuestionScreen}
         currentQuestion={currentQuestion}
@@ -474,8 +492,8 @@ export default function HostGamePage() {
     ) : null,
     final: (
       <HostFinalScreen
-        backgroundClassName={GAME_BACKGROUND_CLASS}
-        backgroundStyle={GAME_BACKGROUND_STYLE}
+        backgroundClassName={backgroundClassName}
+        backgroundStyle={activeBackgroundStyle}
         activeQuizTitle={activeQuizTitle}
         pin={pin}
         players={players}

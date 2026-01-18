@@ -16,6 +16,15 @@ type IncomingQuestion = {
 
 type MediaPayload = { kind: "image" | "video"; src: string; mime?: string };
 
+const normalizeBackgroundImage = (
+  raw: unknown
+): string | null | undefined => {
+  if (raw === null) return null;
+  if (typeof raw !== "string") return undefined;
+  const trimmed = raw.trim();
+  return trimmed ? trimmed : null;
+};
+
 const normalizeMedia = (raw: unknown): MediaPayload | undefined => {
   if (!raw || typeof raw !== "object") return undefined;
   const obj = raw as { kind?: unknown; src?: unknown; mime?: unknown };
@@ -60,7 +69,11 @@ const normalizeQuizBody = (raw: unknown) => {
     throw new Error("Invalid payload");
   }
 
-  const body = raw as { title?: unknown; questions?: unknown };
+  const body = raw as {
+    title?: unknown;
+    questions?: unknown;
+    backgroundImage?: unknown;
+  };
   const title = typeof body.title === "string" ? body.title.trim() : "";
   if (!title) {
     throw new Error("Title is required");
@@ -128,7 +141,9 @@ const normalizeQuizBody = (raw: unknown) => {
     throw new Error("No valid questions");
   }
 
-  return { title, questions };
+  const backgroundImage = normalizeBackgroundImage(body.backgroundImage);
+
+  return { title, questions, backgroundImage };
 };
 
 const toClientQuiz = (quiz: any) => {
@@ -149,6 +164,7 @@ const toClientQuiz = (quiz: any) => {
 
   return {
     ...quiz,
+    backgroundImage: normalizeBackgroundImage(quiz.backgroundImage) ?? undefined,
     questions: Array.isArray(quiz.questions)
       ? quiz.questions.map(normalizeFromStored)
       : [],

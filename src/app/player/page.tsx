@@ -16,8 +16,6 @@ import {
   backgroundStyle,
 } from "@/lib/backgrounds";
 
-const playerBackgroundImage = DEFAULT_BACKGROUND_IMAGE;
-
 export default function PlayerPage() {
   const router = useRouter();
   const [pin, setPin] = useState("");
@@ -38,6 +36,9 @@ export default function PlayerPage() {
   >(null);
   const [resultPopup, setResultPopup] = useState<ResultPopupState | null>(null);
   const [finalPopup, setFinalPopup] = useState<FinalPopupState | null>(null);
+  const [playerBackgroundImage, setPlayerBackgroundImage] = useState<
+    string | undefined
+  >(undefined);
   const questionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const selectedAnswerRef = useRef<number | null>(null);
   const pinRef = useRef<string>("");
@@ -86,6 +87,24 @@ export default function PlayerPage() {
     setName(storedName);
     pinRef.current = storedPin;
     nameRef.current = storedName;
+
+    const loadBackground = async (gamePin: string) => {
+      try {
+        const gameRes = await fetch(`/api/game/${encodeURIComponent(gamePin)}`);
+        if (!gameRes.ok) return;
+        const gameData = (await gameRes.json()) as {
+          backgroundImage?: unknown;
+        };
+        if (typeof gameData.backgroundImage === "string") {
+          const trimmed = gameData.backgroundImage.trim();
+          if (trimmed) setPlayerBackgroundImage(trimmed);
+        }
+      } catch {
+        // ignore
+      }
+    };
+
+    loadBackground(storedPin);
 
     // Ensure socket is connected
     if (!socket.connected) {
@@ -354,10 +373,14 @@ export default function PlayerPage() {
     ),
   } satisfies Record<typeof gameStatus, React.ReactNode>;
 
+  const activeBackgroundStyle = backgroundStyle(
+    playerBackgroundImage || DEFAULT_BACKGROUND_IMAGE
+  );
+
   return (
     <div
-      className={`flex min-h-screen flex-col items-center justify-center bg-purple-900 p-4 ${BACKGROUND_BASE_CLASS}`}
-      style={backgroundStyle(playerBackgroundImage)}
+      className={`flex min-h-screen flex-col items-center justify-center p-4 ${BACKGROUND_BASE_CLASS}`}
+      style={activeBackgroundStyle}
     >
       {finalPopup?.open && (
         <PlayerFinalResultsModal

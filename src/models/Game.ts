@@ -10,6 +10,7 @@ const GameSchema = new mongoose.Schema({
   pin: { type: String, required: true },
   players: [PlayerSchema],
   status: { type: String, default: "waiting" }, // waiting | active | finished
+  backgroundImage: { type: String, required: false },
 });
 
 export default mongoose.models.Game || mongoose.model("Game", GameSchema);

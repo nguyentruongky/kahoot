@@ -1,8 +1,8 @@
 "use client";
 
-export type KahootShapeKind = "triangle" | "diamond" | "circle" | "square";
+export type QuizzaShapeKind = "triangle" | "diamond" | "circle" | "square";
 
-export const kahootShapeForIndex = (index: number): KahootShapeKind => {
+export const quizzaShapeForIndex = (index: number): QuizzaShapeKind => {
   const normalized = ((index % 4) + 4) % 4;
   if (normalized === 0) return "triangle";
   if (normalized === 1) return "diamond";
@@ -10,12 +10,12 @@ export const kahootShapeForIndex = (index: number): KahootShapeKind => {
   return "square";
 };
 
-export function KahootShapeIcon({
+export function QuizzaShapeIcon({
   kind,
   className,
   title,
 }: {
-  kind: KahootShapeKind;
+  kind: QuizzaShapeKind;
   className?: string;
   title?: string;
 }) {

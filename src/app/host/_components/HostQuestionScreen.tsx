@@ -2,9 +2,9 @@
 
 import type { Player } from "@/app/host/game/types";
 import {
-  kahootShapeForIndex,
-  KahootShapeIcon,
-} from "@/components/KahootShapeIcon";
+  quizzaShapeForIndex,
+  QuizzaShapeIcon,
+} from "@/components/QuizzaShapeIcon";
 import { trimTrailingEmptyOptions } from "@/lib/quizDefaults";
 
 type Question = {
@@ -106,8 +106,8 @@ export function HostQuestionScreen({
                 key={index}
                 className={`${colors[index % 4]} text-white p-5 rounded-xl flex items-center gap-3 text-lg font-semibold`}
               >
-                <KahootShapeIcon
-                  kind={kahootShapeForIndex(index)}
+                <QuizzaShapeIcon
+                  kind={quizzaShapeForIndex(index)}
                   className="h-7 w-7 text-white"
                 />
                 {opt}

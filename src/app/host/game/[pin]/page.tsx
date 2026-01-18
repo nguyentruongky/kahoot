@@ -69,8 +69,8 @@ export default function HostGamePage() {
         (window as any).AudioContext || (window as any).webkitAudioContext;
       if (!AudioContextCtor) return;
       const ctx: AudioContext =
-        (window as any).__kahootAudioCtx || new AudioContextCtor();
-      (window as any).__kahootAudioCtx = ctx;
+        (window as any).__quizzaAudioCtx || new AudioContextCtor();
+      (window as any).__quizzaAudioCtx = ctx;
       if (ctx.state === "suspended") ctx.resume().catch(() => {});
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();

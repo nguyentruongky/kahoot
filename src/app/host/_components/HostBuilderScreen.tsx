@@ -1,11 +1,11 @@
 "use client";
 
 import type { RefObject } from "react";
-import { KahootCheckIcon } from "@/components/KahootCheckIcon";
+import { QuizzaCheckIcon } from "@/components/QuizzaCheckIcon";
 import {
-  kahootShapeForIndex,
-  KahootShapeIcon,
-} from "@/components/KahootShapeIcon";
+  quizzaShapeForIndex,
+  QuizzaShapeIcon,
+} from "@/components/QuizzaShapeIcon";
 import { padOptions, trimTrailingEmptyOptions } from "@/lib/quizDefaults";
 
 type EditableQuestion = {
@@ -202,8 +202,8 @@ export function HostBuilderScreen({
                   className={`${colors[index % 4]} text-white rounded-2xl p-4 shadow-lg`}
                 >
                   <div className="flex items-center gap-3">
-                    <KahootShapeIcon
-                      kind={kahootShapeForIndex(index)}
+                    <QuizzaShapeIcon
+                      kind={quizzaShapeForIndex(index)}
                       className="h-7 w-7 text-white"
                     />
 
@@ -222,7 +222,7 @@ export function HostBuilderScreen({
                           : "border-white/60 text-white/80"
                       }`}
                     >
-                      <KahootCheckIcon className="h-4 w-4" />
+                      <QuizzaCheckIcon className="h-4 w-4" />
                     </button>
                   </div>
                 </div>

@@ -27,8 +27,8 @@ export default function handler(req: NextApiRequest, res: NextApiResponseServerI
   }
 
   if (res.socket.server.io) {
-    const existing = res.socket.server.io as IOServer & { _kahootVersion?: number };
-    if (existing._kahootVersion !== SOCKET_IO_VERSION) {
+    const existing = res.socket.server.io as IOServer & { _quizzaVersion?: number };
+    if (existing._quizzaVersion !== SOCKET_IO_VERSION) {
       try {
         console.log("♻️ Recreating Socket.IO server (version changed)...");
         existing.removeAllListeners();
@@ -46,7 +46,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponseServerI
       path: "/api/socket",
       cors: { origin: "*", methods: ["GET", "POST"] },
     });
-    (io as IOServer & { _kahootVersion?: number })._kahootVersion =
+    (io as IOServer & { _quizzaVersion?: number })._quizzaVersion =
       SOCKET_IO_VERSION;
     attachGameHandlers(io);
 

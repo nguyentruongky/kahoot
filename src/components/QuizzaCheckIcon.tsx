@@ -1,6 +1,6 @@
 "use client";
 
-export function KahootCheckIcon({
+export function QuizzaCheckIcon({
   className,
   title,
 }: {

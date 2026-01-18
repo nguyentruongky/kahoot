@@ -21,7 +21,7 @@ async function main() {
     path: "/api/socket",
     cors: { origin: "*", methods: ["GET", "POST"] },
   });
-  (io as IOServer & { _kahootVersion?: number })._kahootVersion = SOCKET_IO_VERSION;
+  (io as IOServer & { _quizzaVersion?: number })._quizzaVersion = SOCKET_IO_VERSION;
   (httpServer as typeof httpServer & { io?: IOServer }).io = io;
   attachGameHandlers(io);
 

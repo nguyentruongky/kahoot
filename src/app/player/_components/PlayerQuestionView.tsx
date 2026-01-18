@@ -2,9 +2,9 @@
 
 import type { Question } from "@/app/player/types";
 import {
-  kahootShapeForIndex,
-  KahootShapeIcon,
-} from "@/components/KahootShapeIcon";
+  quizzaShapeForIndex,
+  QuizzaShapeIcon,
+} from "@/components/QuizzaShapeIcon";
 import { trimTrailingEmptyOptions } from "@/lib/quizDefaults";
 
 type PlayerQuestionViewProps = {
@@ -66,8 +66,8 @@ export function PlayerQuestionView({
             } text-white font-bold py-8 px-6 rounded-xl shadow-lg transform transition hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:transform-none`}
           >
             <div className="mb-2 flex justify-center">
-              <KahootShapeIcon
-                kind={kahootShapeForIndex(index)}
+              <QuizzaShapeIcon
+                kind={quizzaShapeForIndex(index)}
                 className="h-10 w-10 text-white"
               />
             </div>

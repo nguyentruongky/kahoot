@@ -1,7 +1,7 @@
 "use client";
 
 import type { ResultPopupState } from "@/app/player/types";
-import { KahootCheckIcon } from "@/components/KahootCheckIcon";
+import { QuizzaCheckIcon } from "@/components/QuizzaCheckIcon";
 
 type PlayerResultOverlayProps = {
   popup: ResultPopupState;
@@ -29,7 +29,7 @@ export function PlayerResultOverlay({
         <div className="mt-6 flex items-center justify-center">
           <div className="text-7xl font-black drop-shadow-[0_3px_0_rgba(0,0,0,0.25)]">
             {popup.variant === "success" ? (
-              <KahootCheckIcon className="h-20 w-20 text-white" />
+              <QuizzaCheckIcon className="h-20 w-20 text-white" />
             ) : popup.variant === "danger" ? (
               "✕"
             ) : (

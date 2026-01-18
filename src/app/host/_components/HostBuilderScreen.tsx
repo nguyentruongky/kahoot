@@ -127,33 +127,30 @@ export function HostBuilderScreen({
           </p>
 
           {builderQuestions.map((q, idx) => (
-            <div
+            <button
               key={idx}
-              className={`w-full p-3 rounded-xl border ${
+              onClick={() => onSelectQuestion(idx)}
+              className={`w-full text-left p-3 rounded-xl border ${
                 builderIndex === idx
                   ? "border-purple-500 bg-purple-50 text-purple-700"
                   : "border-gray-200 bg-white hover:border-gray-300"
               }`}
             >
-              <button
-                onClick={() => onSelectQuestion(idx)}
-                className="w-full text-left"
-              >
-                <div className="text-xs text-gray-400">Question {idx + 1}</div>
-                <div className="font-semibold truncate">
-                  {q.text || "Untitled"}
-                </div>
-              </button>
+              <div className="text-xs text-gray-400">Question {idx + 1}</div>
+              <div className="font-semibold truncate">{q.text || "Untitled"}</div>
               <div className="mt-2 flex justify-end">
                 <button
                   type="button"
-                  onClick={() => onDeleteQuestion(idx)}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onDeleteQuestion(idx);
+                  }}
                   className="text-xs text-gray-500 hover:text-red-600"
                 >
                   Delete
                 </button>
               </div>
-            </div>
+            </button>
           ))}
 
           <button

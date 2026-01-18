@@ -207,16 +207,140 @@ export default function HostPage() {
     };
   };
 
+  const parseRawQuizText = (text: string) => {
+    const stripDiacritics = (value: string) =>
+      value
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/\u0111/g, "d")
+        .replace(/\u0110/g, "D");
+
+    const isAnswerLine = (line: string) => {
+      const normalized = stripDiacritics(line).toLowerCase();
+      return normalized.startsWith("dap an") || normalized.startsWith("answer");
+    };
+
+    const extractAnswerIndex = (line: string, optionCount: number) => {
+      const afterColon = line.includes(":") ? line.split(":").slice(1).join(":") : line;
+      const letters = afterColon.match(/[a-d]/gi) ?? [];
+      if (letters.length > 0) {
+        const letter = letters[0].toLowerCase();
+        return letter.charCodeAt(0) - "a".charCodeAt(0);
+      }
+      const numbers = afterColon.match(/\d+/g) ?? [];
+      if (numbers.length > 0) {
+        const value = Number(numbers[0]);
+        if (Number.isFinite(value)) {
+          const idx = Math.trunc(value);
+          if (idx >= 0 && idx < optionCount) return idx;
+          if (idx - 1 >= 0 && idx - 1 < optionCount) return idx - 1;
+        }
+      }
+      return 0;
+    };
+
+    const lines = text.split(/\r?\n/);
+    const blocks: string[][] = [];
+    let current: string[] = [];
+
+    const pushCurrent = () => {
+      if (current.length > 0) blocks.push(current);
+      current = [];
+    };
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      if (/^\d+\.\s*/.test(trimmed) && current.length > 0) {
+        pushCurrent();
+      }
+      current.push(trimmed);
+    }
+    pushCurrent();
+
+    if (blocks.length === 0 && text.trim()) {
+      blocks.push([text.trim()]);
+    }
+
+    const questions: EditableQuestion[] = [];
+    for (const block of blocks) {
+      let questionText = "";
+      const options: string[] = [];
+      let answerIndex: number | null = null;
+
+      for (const rawLine of block) {
+        if (!rawLine) continue;
+        const line = rawLine.trim();
+        if (!line) continue;
+
+        if (isAnswerLine(line)) {
+          answerIndex = extractAnswerIndex(line, options.length || 4);
+          continue;
+        }
+
+        const optionMatch = line.match(/^\s*([a-d])[\.\)]\s*(.+)$/i);
+        if (optionMatch) {
+          const optionText = optionMatch[2]?.trim() ?? "";
+          options.push(optionText);
+          continue;
+        }
+
+        if (!questionText) {
+          questionText = line.replace(/^\d+\.\s*/, "").trim();
+          continue;
+        }
+
+        if (options.length === 0) {
+          questionText = `${questionText} ${line}`.trim();
+        }
+      }
+
+      if (!questionText && options.length === 0) continue;
+      const normalizedOptions = options.slice(0, 4);
+      while (normalizedOptions.length < 4) normalizedOptions.push("");
+      const normalizedAnswer =
+        answerIndex !== null
+          ? Math.max(0, Math.min(normalizedOptions.length - 1, answerIndex))
+          : 0;
+
+      questions.push({
+        text: questionText || "Untitled question",
+        options: normalizedOptions,
+        correctAnswer: normalizedAnswer,
+      });
+    }
+
+    return { questions };
+  };
+
   const applyImportedText = (text: string) => {
-    const parsed = JSON.parse(text) as unknown;
-    const { title, questions } = normalizeImportedQuestions(parsed);
-    if (title) setBuilderTitle(title);
-    setBuilderQuestions(questions);
-    setBuilderIndex(0);
-    setBuilderQuizId(null);
-    deletedQuestionStackRef.current = [];
-    setDeletedQuestionStackSize(0);
-    setStage("builder");
+    try {
+      const parsed = JSON.parse(text) as unknown;
+      const { title, questions } = normalizeImportedQuestions(parsed);
+      if (title) setBuilderTitle(title);
+      setBuilderQuestions(questions);
+      setBuilderIndex(0);
+      setBuilderQuizId(null);
+      deletedQuestionStackRef.current = [];
+      setDeletedQuestionStackSize(0);
+      setStage("builder");
+      return;
+    } catch (error) {
+      const { questions } = parseRawQuizText(text);
+      if (questions.length === 0) {
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Invalid JSON or raw quiz format.";
+        throw new Error(message);
+      }
+      setBuilderQuestions(questions);
+      setBuilderIndex(0);
+      setBuilderQuizId(null);
+      deletedQuestionStackRef.current = [];
+      setDeletedQuestionStackSize(0);
+      setStage("builder");
+    }
   };
 
   // INITIALIZE

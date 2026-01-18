@@ -12,6 +12,7 @@ import {
   KahootShapeIcon,
 } from "@/components/KahootShapeIcon";
 import { KahootCheckIcon } from "@/components/KahootCheckIcon";
+import { trimTrailingEmptyOptions } from "@/lib/quizDefaults";
 
 type HostQuestionScreenProps = {
   backgroundClassName: string;
@@ -143,9 +144,13 @@ export function HostQuestionScreen({
               );
               }
 
-              const options = (currentQuestion?.options ?? []).slice(0, 4);
-              const counts = options.map(
-                (_, idx) => answers.filter((a) => a.answer === idx).length
+              const optionEntries = trimTrailingEmptyOptions(
+                currentQuestion?.options ?? []
+              )
+                .map((opt, index) => ({ opt, index }))
+                .filter((entry) => entry.opt.trim() !== "");
+              const counts = optionEntries.map((entry) =>
+                answers.filter((a) => a.answer === entry.index).length
               );
               const maxCount = Math.max(1, ...counts);
               const meta = [
@@ -178,39 +183,46 @@ export function HostQuestionScreen({
                   shape: kahootShapeForIndex(3),
                 },
               ] as const;
+              const columnCount = Math.max(1, optionEntries.length);
 
               return (
               <>
                 <div className="flex min-h-0 flex-1 items-end justify-center pb-2 pt-6">
                   <div className="w-full max-w-6xl">
                     <div className="relative h-[46vh] min-h-[320px] max-h-[460px]">
-                      <div className="absolute inset-0 grid h-full grid-cols-[repeat(4,112px)] items-stretch justify-center gap-3 px-4">
+                      <div
+                        className="absolute inset-0 grid h-full items-stretch justify-center gap-3 px-4"
+                        style={{
+                          gridTemplateColumns: `repeat(${columnCount}, 112px)`,
+                        }}
+                      >
                         {counts.map((count, idx) => {
+                          const optionIndex = optionEntries[idx]?.index ?? idx;
                           const heightPct = (count / maxCount) * 100;
                           const barHeight =
                             count === 0 ? 0 : Math.max(18, heightPct);
                           const isCorrect =
-                            idx === currentQuestion?.correctAnswer;
+                            optionIndex === currentQuestion?.correctAnswer;
 
                           return (
                             <div
-                              key={idx}
+                              key={optionIndex}
                               className="flex h-full items-end justify-center"
                             >
                               <div className="flex h-full w-28 flex-col items-center justify-end overflow-hidden rounded-xl">
                                 <div className="relative w-28 flex-1">
                                   <div className="absolute inset-x-0 bottom-0 h-0.5 bg-black/30" />
                                   <div
-                                    className={`absolute inset-x-0 bottom-0 shadow-2xl ring-1 ring-black/25 ${meta[idx].bar}`}
+                                    className={`absolute inset-x-0 bottom-0 shadow-2xl ring-1 ring-black/25 ${meta[optionIndex % 4].bar}`}
                                     style={{ height: `${barHeight}%` }}
                                     title={`${count} answers`}
                                   />
                                 </div>
                                 <div
-                                  className={`flex h-14 w-full items-center px-4 text-white shadow-2xl ring-1 ring-black/25 ${meta[idx].chip}`}
+                                  className={`flex h-14 w-full items-center px-4 text-white shadow-2xl ring-1 ring-black/25 ${meta[optionIndex % 4].chip}`}
                                 >
                                   <KahootShapeIcon
-                                    kind={meta[idx].shape}
+                                    kind={meta[optionIndex % 4].shape}
                                     className="h-7 w-7 shrink-0 text-white"
                                   />
                                   <span className="ml-3 text-4xl font-black tabular-nums">
@@ -232,17 +244,17 @@ export function HostQuestionScreen({
                 </div>
 
                 <div className="mt-6 grid flex-none grid-cols-2 gap-0 overflow-hidden rounded-xl shadow-2xl ring-1 ring-white/10">
-                  {options.map((opt, idx) => {
-                    const isCorrect = idx === currentQuestion?.correctAnswer;
+                  {optionEntries.map(({ opt, index }) => {
+                    const isCorrect = index === currentQuestion?.correctAnswer;
                     return (
                       <div
-                        key={idx}
-                        className={`relative h-[112px] ${meta[idx].tile}`}
+                        key={index}
+                        className={`relative h-[112px] ${meta[index % 4].tile}`}
                       >
                         <div className="relative flex h-full items-center justify-between px-8">
                           <div className="flex items-center gap-5">
                             <KahootShapeIcon
-                              kind={meta[idx].shape}
+                              kind={meta[index % 4].shape}
                               className="h-10 w-10 text-white"
                             />
                             <div className="text-3xl font-extrabold tracking-tight text-white/90">
@@ -348,7 +360,10 @@ export function HostQuestionScreen({
                 </div>
 
                 <div className="mt-9 grid grid-cols-2 gap-5">
-                  {(currentQuestion?.options ?? []).map((opt, idx) => {
+                  {trimTrailingEmptyOptions(currentQuestion?.options ?? [])
+                    .map((opt, index) => ({ opt, index }))
+                    .filter((entry) => entry.opt.trim() !== "")
+                    .map(({ opt, index }) => {
                     const colors = [
                       "bg-red-500",
                       "bg-blue-500",
@@ -358,13 +373,13 @@ export function HostQuestionScreen({
 
                     return (
                       <div
-                        key={idx}
+                        key={index}
                         className={`${
-                          colors[idx % 4]
+                          colors[index % 4]
                         } flex min-h-[92px] items-center gap-4 rounded-2xl p-7 text-2xl font-extrabold text-white`}
                       >
                         <KahootShapeIcon
-                          kind={kahootShapeForIndex(idx)}
+                          kind={kahootShapeForIndex(index)}
                           className="h-9 w-9 text-white"
                         />
                         {opt}

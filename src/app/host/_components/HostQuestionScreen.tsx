@@ -5,6 +5,7 @@ import {
   kahootShapeForIndex,
   KahootShapeIcon,
 } from "@/components/KahootShapeIcon";
+import { trimTrailingEmptyOptions } from "@/lib/quizDefaults";
 
 type Question = {
   text: string;
@@ -39,6 +40,10 @@ export function HostQuestionScreen({
   onSkipToResults,
   onNextQuestion,
 }: HostQuestionScreenProps) {
+  const optionEntries = trimTrailingEmptyOptions(currentQuestion.options)
+    .map((opt, index) => ({ opt, index }))
+    .filter((entry) => entry.opt.trim() !== "");
+
   return (
     <div className="bg-white text-gray-900 rounded-3xl shadow-2xl p-6">
       <div className="flex items-center justify-between mb-4">
@@ -84,7 +89,7 @@ export function HostQuestionScreen({
 
       {!showResults ? (
         <div className="grid grid-cols-2 gap-4">
-          {currentQuestion.options.map((opt, idx) => {
+          {optionEntries.map(({ opt, index }) => {
             const colors = [
               "bg-red-500",
               "bg-blue-500",
@@ -94,11 +99,11 @@ export function HostQuestionScreen({
 
             return (
               <div
-                key={idx}
-                className={`${colors[idx % 4]} text-white p-5 rounded-xl flex items-center gap-3 text-lg font-semibold`}
+                key={index}
+                className={`${colors[index % 4]} text-white p-5 rounded-xl flex items-center gap-3 text-lg font-semibold`}
               >
                 <KahootShapeIcon
-                  kind={kahootShapeForIndex(idx)}
+                  kind={kahootShapeForIndex(index)}
                   className="h-7 w-7 text-white"
                 />
                 {opt}
@@ -108,14 +113,14 @@ export function HostQuestionScreen({
         </div>
       ) : (
         <div className="space-y-4">
-          {currentQuestion.options.map((opt, idx) => {
-            const count = answers.filter((a) => a.answer === idx).length;
+          {optionEntries.map(({ opt, index }) => {
+            const count = answers.filter((a) => a.answer === index).length;
             const percentage = answers.length ? (count / answers.length) * 100 : 0;
-            const isCorrect = idx === currentQuestion.correctAnswer;
+            const isCorrect = index === currentQuestion.correctAnswer;
 
             return (
               <div
-                key={idx}
+                key={index}
                 className={`border rounded-xl p-4 flex items-center justify-between ${
                   isCorrect ? "border-green-400 bg-green-50" : "border-gray-200"
                 }`}
@@ -158,4 +163,3 @@ export function HostQuestionScreen({
     </div>
   );
 }
-

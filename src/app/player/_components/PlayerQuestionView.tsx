@@ -5,6 +5,7 @@ import {
   kahootShapeForIndex,
   KahootShapeIcon,
 } from "@/components/KahootShapeIcon";
+import { trimTrailingEmptyOptions } from "@/lib/quizDefaults";
 
 type PlayerQuestionViewProps = {
   question: Question;
@@ -23,6 +24,10 @@ export function PlayerQuestionView({
   getAnswerClassName,
   onSelectAnswer,
 }: PlayerQuestionViewProps) {
+  const optionEntries = trimTrailingEmptyOptions(question.options)
+    .map((opt, index) => ({ opt, index }))
+    .filter((entry) => entry.opt.trim() !== "");
+
   return (
     <div className="w-full max-w-2xl">
       <div className="bg-white rounded-lg shadow-lg p-6 mb-6 text-center">
@@ -49,7 +54,7 @@ export function PlayerQuestionView({
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        {question.options.map((option, index) => (
+        {optionEntries.map(({ opt, index }) => (
           <button
             key={index}
             onClick={() => onSelectAnswer(index)}
@@ -66,7 +71,7 @@ export function PlayerQuestionView({
                 className="h-10 w-10 text-white"
               />
             </div>
-            <div className="text-lg">{option}</div>
+            <div className="text-lg">{opt}</div>
           </button>
         ))}
       </div>

@@ -6,6 +6,7 @@ import {
   kahootShapeForIndex,
   KahootShapeIcon,
 } from "@/components/KahootShapeIcon";
+import { padOptions, trimTrailingEmptyOptions } from "@/lib/quizDefaults";
 
 type EditableQuestion = {
   text: string;
@@ -48,6 +49,10 @@ export function HostBuilderScreen({
   onSave,
 }: HostBuilderScreenProps) {
   const active = builderQuestions[builderIndex];
+  const visibleOptions = trimTrailingEmptyOptions(active?.options ?? []);
+  const optionsForEdit =
+    visibleOptions.length === 0 ? padOptions(visibleOptions, 2) : visibleOptions;
+  const optionEntries = optionsForEdit.map((opt, index) => ({ opt, index }));
 
   return (
     <div className="bg-white text-gray-900 rounded-3xl shadow-2xl overflow-hidden flex flex-col min-h-[600px] max-h-[calc(100vh-8rem)]">
@@ -182,35 +187,35 @@ export function HostBuilderScreen({
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            {(active?.options ?? []).map((opt, idx) => {
+            {optionEntries.map(({ opt, index }) => {
               const colors = [
                 "bg-red-500",
                 "bg-blue-500",
                 "bg-yellow-500",
                 "bg-green-500",
               ];
-              const isCorrect = active?.correctAnswer === idx;
+              const isCorrect = active?.correctAnswer === index;
 
               return (
                 <div
-                  key={idx}
-                  className={`${colors[idx % 4]} text-white rounded-2xl p-4 shadow-lg`}
+                  key={index}
+                  className={`${colors[index % 4]} text-white rounded-2xl p-4 shadow-lg`}
                 >
                   <div className="flex items-center gap-3">
                     <KahootShapeIcon
-                      kind={kahootShapeForIndex(idx)}
+                      kind={kahootShapeForIndex(index)}
                       className="h-7 w-7 text-white"
                     />
 
                     <input
                       value={opt}
-                      onChange={(e) => onUpdateOption(idx, e.target.value)}
+                      onChange={(e) => onUpdateOption(index, e.target.value)}
                       className="flex-1  rounded-lg px-3 py-2 outline-none placeholder:text-white/70"
-                      placeholder={`Answer ${idx + 1}`}
+                      placeholder={`Answer ${index + 1}`}
                     />
 
                     <button
-                      onClick={() => onSelectCorrect(idx)}
+                      onClick={() => onSelectCorrect(index)}
                       className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${
                         isCorrect
                           ? "bg-white text-green-600 border-white"

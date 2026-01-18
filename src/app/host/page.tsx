@@ -11,6 +11,9 @@ import { HostLobbyScreen } from "@/app/host/_components/HostLobbyScreen";
 import { HostQuestionScreen } from "@/app/host/_components/HostQuestionScreen";
 import { HostFinalScreen } from "@/app/host/_components/HostFinalScreen";
 
+const QUESTION_DURATION_SEC = 20;
+const QUESTION_DURATION_MS = QUESTION_DURATION_SEC * 1000;
+
 interface Player {
   name: string;
   score: number;
@@ -45,7 +48,8 @@ export default function HostPage() {
   const [currentQuestion, setCurrentQuestion] = useState<any>(null);
   const [answers, setAnswers] = useState<any[]>([]);
   const [showResults, setShowResults] = useState(false);
-  const [timer, setTimer] = useState(20);
+  const [timer, setTimer] = useState(QUESTION_DURATION_SEC);
+  const [timerMs, setTimerMs] = useState(QUESTION_DURATION_MS);
   const [gameEnded, setGameEnded] = useState(false);
   const [finalResults, setFinalResults] = useState<Player[]>([]);
 
@@ -284,10 +288,29 @@ export default function HostPage() {
 
   // TIMER
   useEffect(() => {
-    if (currentQuestion && timer > 0 && !showResults) {
-      const interval = setInterval(() => setTimer((prev) => prev - 1), 1000);
-      return () => clearInterval(interval);
-    } else if (timer === 0 && currentQuestion && !showResults) {
+    if (!currentQuestion || showResults) return;
+    const durationMs = QUESTION_DURATION_MS;
+    const start = performance.now();
+    setTimerMs(durationMs);
+    setTimer(Math.ceil(durationMs / 1000));
+
+    let rafId = 0;
+    const tick = (now: number) => {
+      const elapsed = now - start;
+      const remaining = Math.max(0, durationMs - elapsed);
+      setTimerMs(remaining);
+      setTimer(Math.max(0, Math.ceil(remaining / 1000)));
+      if (remaining > 0) {
+        rafId = requestAnimationFrame(tick);
+      }
+    };
+
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
+  }, [currentQuestion, showResults]);
+
+  useEffect(() => {
+    if (timer === 0 && currentQuestion && !showResults) {
       setShowResults(true);
     }
   }, [timer, currentQuestion, showResults]);
@@ -310,6 +333,7 @@ export default function HostPage() {
     ) {
       setShowResults(true);
       setTimer(0);
+      setTimerMs(0);
     }
   }, [answers.length, players.length, currentQuestion, showResults]);
 
@@ -350,6 +374,7 @@ export default function HostPage() {
     setCurrentQuestion(null);
     setShowResults(false);
     setTimer(0);
+    setTimerMs(0);
   };
 
   const resetToLobby = () => {
@@ -376,7 +401,8 @@ export default function HostPage() {
     }
 
     setCurrentQuestion(question);
-    setTimer(20);
+    setTimer(QUESTION_DURATION_SEC);
+    setTimerMs(QUESTION_DURATION_MS);
     setAnswers([]);
     setShowResults(false);
     endQuestionSentRef.current = false;
@@ -534,6 +560,8 @@ export default function HostPage() {
           questionIndex={questionIndex}
           questionSetLength={questionSet.length}
           timer={timer}
+          timerMs={timerMs}
+          durationMs={QUESTION_DURATION_MS}
           currentQuestion={currentQuestion}
           showResults={showResults}
           onQuitGame={finalizeGame}

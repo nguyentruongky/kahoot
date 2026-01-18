@@ -23,6 +23,7 @@ type HostQuestionScreenProps = {
   players: Player[];
   answers: PlayerAnswerPayload[];
   effectiveTimer: number;
+  effectiveTimerMs: number;
   durationSec: number;
   questionIndex: number;
   questionSetLength: number;
@@ -40,6 +41,7 @@ export function HostQuestionScreen({
   players,
   answers,
   effectiveTimer,
+  effectiveTimerMs,
   durationSec,
   questionIndex,
   questionSetLength,
@@ -344,10 +346,11 @@ export function HostQuestionScreen({
 
                 <div className="mt-8 h-3 w-full rounded-full bg-gray-200">
                   <div
-                    className="h-3 rounded-full bg-purple-500 transition-all duration-1000"
+                    className="h-3 rounded-full bg-purple-500"
                     style={{
                       width: `${
-                        (effectiveTimer / Math.max(1, durationSec)) * 100
+                        (effectiveTimerMs / Math.max(1, durationSec * 1000)) *
+                        100
                       }%`,
                     }}
                   />

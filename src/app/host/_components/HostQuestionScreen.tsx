@@ -20,6 +20,8 @@ type HostQuestionScreenProps = {
   questionIndex: number;
   questionSetLength: number;
   timer: number;
+  timerMs: number;
+  durationMs: number;
   currentQuestion: Question;
   showResults: boolean;
   onQuitGame: () => void;
@@ -34,6 +36,8 @@ export function HostQuestionScreen({
   questionIndex,
   questionSetLength,
   timer,
+  timerMs,
+  durationMs,
   currentQuestion,
   showResults,
   onQuitGame,
@@ -78,8 +82,8 @@ export function HostQuestionScreen({
 
       <div className="w-full bg-gray-200 h-2 rounded-full mb-6">
         <div
-          className="h-2 rounded-full bg-purple-500 transition-all duration-1000"
-          style={{ width: `${(timer / 20) * 100}%` }}
+          className="h-2 rounded-full bg-purple-500"
+          style={{ width: `${(timerMs / Math.max(1, durationMs)) * 100}%` }}
         />
       </div>
 

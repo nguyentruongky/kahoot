@@ -38,6 +38,7 @@ export default function HostGamePage() {
   );
   const [answers, setAnswers] = useState<PlayerAnswerPayload[]>([]);
   const [timer, setTimer] = useState(20);
+  const [timerMs, setTimerMs] = useState(20000);
   const [durationSec, setDurationSec] = useState(20);
   const [stage, setStage] = useState<"lobby" | "question" | "final">("lobby");
   const [postQuestionScreen, setPostQuestionScreen] = useState<
@@ -60,6 +61,7 @@ export default function HostGamePage() {
       timer === 0 ||
       (expectedAnswerCount > 0 && answers.length >= expectedAnswerCount));
   const effectiveTimer = showResults ? 0 : timer;
+  const effectiveTimerMs = showResults ? 0 : timerMs;
 
   const playBeep = (frequency = 880, durationMs = 120) => {
     try {
@@ -222,6 +224,7 @@ export default function HostGamePage() {
     const handleEndQuestion = (data: EndQuestionPayload) => {
       setQuestionEnded(true);
       setTimer(0);
+      setTimerMs(0);
       setPostQuestionScreen("results");
       endQuestionSentRef.current = true;
 
@@ -267,11 +270,26 @@ export default function HostGamePage() {
 
   // TIMER
   useEffect(() => {
-    if (currentQuestion && timer > 0 && !showResults) {
-      const interval = setInterval(() => setTimer((prev) => prev - 1), 1000);
-      return () => clearInterval(interval);
-    }
-  }, [timer, currentQuestion, showResults]);
+    if (!currentQuestion || showResults) return;
+    const durationMs = Math.max(1, durationSec) * 1000;
+    const start = performance.now();
+    setTimerMs(durationMs);
+    setTimer(durationSec);
+
+    let rafId = 0;
+    const tick = (now: number) => {
+      const elapsed = now - start;
+      const remaining = Math.max(0, durationMs - elapsed);
+      setTimerMs(remaining);
+      setTimer(Math.max(0, Math.ceil(remaining / 1000)));
+      if (remaining > 0) {
+        rafId = requestAnimationFrame(tick);
+      }
+    };
+
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
+  }, [currentQuestion, durationSec, showResults]);
 
   useEffect(() => {
     if (!currentQuestion || !pin) return;
@@ -279,6 +297,7 @@ export default function HostGamePage() {
     if (expectedAnswerCount > 0 && answers.length >= expectedAnswerCount) {
       setQuestionEnded(true);
       setTimer(0);
+      setTimerMs(0);
       setPostQuestionScreen("results");
       if (!endQuestionSentRef.current) {
         endQuestionSentRef.current = true;
@@ -314,6 +333,7 @@ export default function HostGamePage() {
     setStage("final");
     setCurrentQuestion(null);
     setTimer(0);
+    setTimerMs(0);
   };
 
   const requestEndGame = () => {
@@ -341,16 +361,22 @@ export default function HostGamePage() {
       return;
     }
 
+    const nextDurationSec = 20;
     setCurrentQuestion(question);
-    setDurationSec(20);
-    setTimer(20);
+    setDurationSec(nextDurationSec);
+    setTimer(nextDurationSec);
+    setTimerMs(nextDurationSec * 1000);
     setAnswers([]);
     endQuestionSentRef.current = false;
     setPostQuestionScreen("results");
     setExpectedAnswerCount(players.length);
     setQuestionEnded(false);
 
-    socket.emit("start_question", { pin, question, durationSec: 20 });
+    socket.emit("start_question", {
+      pin,
+      question,
+      durationSec: nextDurationSec,
+    });
 
     setStage("question");
     setQuestionIndex((prev) => prev + 1);
@@ -437,6 +463,7 @@ export default function HostGamePage() {
         players={players}
         answers={answers}
         effectiveTimer={effectiveTimer}
+        effectiveTimerMs={effectiveTimerMs}
         durationSec={durationSec}
         questionIndex={questionIndex}
         questionSetLength={questionSet.length}

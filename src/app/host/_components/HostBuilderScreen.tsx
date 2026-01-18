@@ -24,11 +24,15 @@ type HostBuilderScreenProps = {
   onBuilderTitleChange: (value: string) => void;
   onSelectQuestion: (index: number) => void;
   onAddQuestion: () => void;
+  onDeleteQuestion: (index: number) => void;
   onUpdateQuestionText: (text: string) => void;
   onUpdateOption: (optionIndex: number, value: string) => void;
   onSelectCorrect: (optionIndex: number) => void;
   onSetMedia: (media?: EditableQuestion["media"]) => void;
   onCancel: () => void;
+  onOpenPasteJson: () => void;
+  canUndoDelete: boolean;
+  onUndoDelete: () => void;
   onSave: () => void;
 };
 
@@ -41,11 +45,15 @@ export function HostBuilderScreen({
   onBuilderTitleChange,
   onSelectQuestion,
   onAddQuestion,
+  onDeleteQuestion,
   onUpdateQuestionText,
   onUpdateOption,
   onSelectCorrect,
   onSetMedia,
   onCancel,
+  onOpenPasteJson,
+  canUndoDelete,
+  onUndoDelete,
   onSave,
 }: HostBuilderScreenProps) {
   const active = builderQuestions[builderIndex];
@@ -80,11 +88,27 @@ export function HostBuilderScreen({
             Cancel
           </button>
 
+          {canUndoDelete ? (
+            <button
+              onClick={onUndoDelete}
+              className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 bg-white hover:bg-gray-50"
+            >
+              Undo delete
+            </button>
+          ) : null}
+
           <button
             onClick={() => fileInputRef.current?.click()}
             className="px-4 py-2 rounded-lg border border-purple-200 text-purple-700 bg-purple-50 hover:bg-purple-100"
           >
             Import JSON
+          </button>
+
+          <button
+            onClick={onOpenPasteJson}
+            className="px-4 py-2 rounded-lg border border-purple-200 text-purple-700 bg-purple-50 hover:bg-purple-100"
+          >
+            Paste JSON
           </button>
 
           <button
@@ -103,18 +127,33 @@ export function HostBuilderScreen({
           </p>
 
           {builderQuestions.map((q, idx) => (
-            <button
+            <div
               key={idx}
-              onClick={() => onSelectQuestion(idx)}
-              className={`w-full text-left p-3 rounded-xl border ${
+              className={`w-full p-3 rounded-xl border ${
                 builderIndex === idx
                   ? "border-purple-500 bg-purple-50 text-purple-700"
                   : "border-gray-200 bg-white hover:border-gray-300"
               }`}
             >
-              <div className="text-xs text-gray-400">Question {idx + 1}</div>
-              <div className="font-semibold truncate">{q.text || "Untitled"}</div>
-            </button>
+              <button
+                onClick={() => onSelectQuestion(idx)}
+                className="w-full text-left"
+              >
+                <div className="text-xs text-gray-400">Question {idx + 1}</div>
+                <div className="font-semibold truncate">
+                  {q.text || "Untitled"}
+                </div>
+              </button>
+              <div className="mt-2 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => onDeleteQuestion(idx)}
+                  className="text-xs text-gray-500 hover:text-red-600"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
           ))}
 
           <button

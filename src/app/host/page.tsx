@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { initSocketServer, socket } from "@/lib/socketClient";
 import { useRouter } from "next/navigation";
 import { mergePlayers } from "@/app/host/game/utils";
@@ -63,6 +63,12 @@ export default function HostPage() {
     { text: "Untitled question", options: ["", "", "", ""], correctAnswer: 0 },
   ]);
   const [builderIndex, setBuilderIndex] = useState(0);
+  const deletedQuestionStackRef = useRef<
+    { question: EditableQuestion; index: number; replace?: boolean }[]
+  >([]);
+  const [deletedQuestionStackSize, setDeletedQuestionStackSize] = useState(0);
+  const [showJsonPaste, setShowJsonPaste] = useState(false);
+  const [jsonPasteText, setJsonPasteText] = useState("");
 
   // FILE IMPORT
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -199,6 +205,18 @@ export default function HostPage() {
           : undefined,
       questions,
     };
+  };
+
+  const applyImportedText = (text: string) => {
+    const parsed = JSON.parse(text) as unknown;
+    const { title, questions } = normalizeImportedQuestions(parsed);
+    if (title) setBuilderTitle(title);
+    setBuilderQuestions(questions);
+    setBuilderIndex(0);
+    setBuilderQuizId(null);
+    deletedQuestionStackRef.current = [];
+    setDeletedQuestionStackSize(0);
+    setStage("builder");
   };
 
   // INITIALIZE
@@ -429,6 +447,8 @@ export default function HostPage() {
       }))
     );
     setBuilderIndex(0);
+    deletedQuestionStackRef.current = [];
+    setDeletedQuestionStackSize(0);
     setStage("builder");
   };
 
@@ -443,8 +463,77 @@ export default function HostPage() {
       },
     ]);
     setBuilderIndex(0);
+    deletedQuestionStackRef.current = [];
+    setDeletedQuestionStackSize(0);
     setStage("builder");
   };
+
+  const deleteBuilderQuestion = (index: number) => {
+    const target = builderQuestions[index];
+    if (target) {
+      const replace = builderQuestions.length <= 1;
+      deletedQuestionStackRef.current = [
+        ...deletedQuestionStackRef.current,
+        { question: target, index, replace },
+      ];
+      setDeletedQuestionStackSize(deletedQuestionStackRef.current.length);
+    }
+
+    setBuilderQuestions((prev) => {
+      if (prev.length <= 1) {
+        return [
+          { text: "Untitled question", options: ["", "", "", ""], correctAnswer: 0 },
+        ];
+      }
+      return prev.filter((_, i) => i !== index);
+    });
+    setBuilderIndex((prevIndex) => {
+      if (index < prevIndex) return prevIndex - 1;
+      if (index === prevIndex) return Math.max(0, prevIndex - 1);
+      return prevIndex;
+    });
+  };
+
+  const undoDeleteBuilderQuestion = useCallback(() => {
+    const stack = deletedQuestionStackRef.current;
+    if (stack.length === 0) return;
+    const last = stack[stack.length - 1];
+    deletedQuestionStackRef.current = stack.slice(0, -1);
+    setDeletedQuestionStackSize(deletedQuestionStackRef.current.length);
+    setBuilderQuestions((prev) => {
+      if (last.replace) {
+        return [last.question];
+      }
+      const next = [...prev];
+      const insertAt = Math.min(Math.max(last.index, 0), next.length);
+      next.splice(insertAt, 0, last.question);
+      return next;
+    });
+    setBuilderIndex(last.index);
+  }, []);
+
+  useEffect(() => {
+    if (stage !== "builder") return;
+    const handler = (event: KeyboardEvent) => {
+      if (event.repeat) return;
+      if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== "z") {
+        return;
+      }
+      if (event.shiftKey) return;
+
+      const target = event.target as HTMLElement | null;
+      const tagName = target?.tagName?.toLowerCase();
+      const isTextInput =
+        tagName === "input" || tagName === "textarea" || target?.isContentEditable;
+      if (isTextInput) return;
+
+      event.preventDefault();
+      undoDeleteBuilderQuestion();
+    };
+
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [stage, undoDeleteBuilderQuestion]);
 
   const saveQuiz = async () => {
     const sanitized = builderQuestions.map((q) => ({
@@ -512,6 +601,7 @@ export default function HostPage() {
             { text: "New question", options: ["", "", "", ""], correctAnswer: 0 },
           ])
         }
+        onDeleteQuestion={deleteBuilderQuestion}
         onUpdateQuestionText={(text) =>
           setBuilderQuestions((prev) =>
             prev.map((q, i) => (i === builderIndex ? { ...q, text } : q))
@@ -540,6 +630,12 @@ export default function HostPage() {
           )
         }
         onCancel={() => setStage("dashboard")}
+        onOpenPasteJson={() => {
+          setJsonPasteText("");
+          setShowJsonPaste(true);
+        }}
+        canUndoDelete={deletedQuestionStackSize > 0}
+        onUndoDelete={undoDeleteBuilderQuestion}
         onSave={saveQuiz}
       />
     ),
@@ -620,16 +716,58 @@ export default function HostPage() {
       <HostJsonImportInput
         inputRef={fileInputRef}
         onImportText={async (text) => {
-          const parsed = JSON.parse(text) as unknown;
-          const { title, questions } = normalizeImportedQuestions(parsed);
-          if (title) setBuilderTitle(title);
-          setBuilderQuestions(questions);
-          setBuilderIndex(0);
-          setBuilderQuizId(null);
-          setStage("builder");
+          applyImportedText(text);
         }}
         onError={(message) => alert(message)}
       />
+
+      {showJsonPaste ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="w-full max-w-2xl rounded-2xl bg-white text-gray-900 shadow-2xl">
+            <div className="flex items-center justify-between px-6 py-4 border-b">
+              <h2 className="text-lg font-semibold">Paste JSON</h2>
+              <button
+                onClick={() => setShowJsonPaste(false)}
+                className="px-3 py-1 rounded-md border border-gray-200 text-gray-600"
+              >
+                Close
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <textarea
+                value={jsonPasteText}
+                onChange={(e) => setJsonPasteText(e.target.value)}
+                className="w-full h-64 rounded-xl border border-gray-200 p-4 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-purple-200"
+                placeholder='{"title":"My Quiz","questions":[{"text":"Question?","options":["A","B"],"correctAnswer":0}]}'
+              />
+              <div className="flex items-center justify-end gap-3">
+                <button
+                  onClick={() => setShowJsonPaste(false)}
+                  className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    try {
+                      applyImportedText(jsonPasteText);
+                      setJsonPasteText("");
+                      setShowJsonPaste(false);
+                    } catch (error) {
+                      const message =
+                        error instanceof Error ? error.message : "Invalid JSON";
+                      alert(message);
+                    }
+                  }}
+                  className="px-5 py-2 rounded-lg bg-purple-600 text-white font-semibold"
+                >
+                  Import
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <HostConsoleHeader
         stage={stage}

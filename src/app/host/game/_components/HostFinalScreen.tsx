@@ -130,7 +130,7 @@ export function HostFinalScreen({
         <div className="flex flex-1 items-center justify-center py-14">
           <div className="relative w-full">
             <div className="mb-8 text-center">
-              <div className="inline-flex items-center justify-center rounded-2xl bg-white/12 px-8 py-4 text-4xl font-extrabold tracking-tight ring-1 ring-white/15 backdrop-blur">
+              <div className="inline-flex items-center justify-center rounded-2xl bg-black/45 px-8 py-4 text-4xl font-extrabold tracking-tight ring-1 ring-white/25 backdrop-blur">
                 {activeQuizTitle || "Final Results"}
               </div>
             </div>
@@ -141,11 +141,14 @@ export function HostFinalScreen({
                 const player = podium[podiumIndex];
                 const meta = medal[podiumIndex];
                 const isPlaceholder = player.name === "Waiting for players…";
+                const revealDelay =
+                  place === 3 ? 0 : place === 2 ? 3 : 6;
 
                 return (
                   <div
                     key={`${place}-${player.name}`}
-                    className="w-[220px] sm:w-60 md:w-[280px]"
+                    className="w-[220px] sm:w-60 md:w-[280px] podium-reveal"
+                    style={{ animationDelay: `${revealDelay}s` }}
                   >
                     <div className="mb-4 text-center">
                       <div className="flex items-center justify-center gap-3">
@@ -209,6 +212,24 @@ export function HostFinalScreen({
           </div>
         </div>
       </div>
+      <style jsx>{`
+        .podium-reveal {
+          opacity: 0;
+          transform: translateY(24px) scale(0.98);
+          animation: podiumRise 520ms ease-out forwards;
+        }
+
+        @keyframes podiumRise {
+          0% {
+            opacity: 0;
+            transform: translateY(24px) scale(0.98);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+      `}</style>
     </div>
   );
 }

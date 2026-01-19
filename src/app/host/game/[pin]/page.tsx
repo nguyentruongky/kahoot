@@ -27,18 +27,18 @@ export default function HostGamePage() {
     typeof rawPin === "string"
       ? rawPin
       : Array.isArray(rawPin)
-      ? rawPin[0] ?? ""
-      : "";
+        ? (rawPin[0] ?? "")
+        : "";
 
   const [activeQuizTitle, setActiveQuizTitle] = useState("");
   const [players, setPlayers] = useState<Player[]>([]);
   const [questionSet, setQuestionSet] = useState<QuizQuestion[]>([]);
   const [questionIndex, setQuestionIndex] = useState(0);
   const [currentQuestion, setCurrentQuestion] = useState<QuizQuestion | null>(
-    null
+    null,
   );
   const [backgroundImage, setBackgroundImage] = useState<string | undefined>(
-    DEFAULT_BACKGROUND_IMAGE
+    DEFAULT_BACKGROUND_IMAGE,
   );
   const [answers, setAnswers] = useState<PlayerAnswerPayload[]>([]);
   const [timer, setTimer] = useState(20);
@@ -48,12 +48,13 @@ export default function HostGamePage() {
   const [postQuestionScreen, setPostQuestionScreen] = useState<
     "results" | "scoreboard"
   >("results");
+  const [showEndGameConfirm, setShowEndGameConfirm] = useState(false);
   const endQuestionSentRef = useRef(false);
   const [expectedAnswerCount, setExpectedAnswerCount] = useState(0);
   const [questionEnded, setQuestionEnded] = useState(false);
   const [joinUrl, setJoinUrl] = useState<string>("");
   const [joinLinkCopyState, setJoinLinkCopyState] = useState<"idle" | "copied">(
-    "idle"
+    "idle",
   );
   const lobbyTrackRef = useRef<string | null>(null);
   const playingTrackRef = useRef<string | null>(null);
@@ -65,7 +66,7 @@ export default function HostGamePage() {
   const finalWinPlayedRef = useRef(false);
   const timedOutRef = useRef(false);
   const joinLinkCopyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null
+    null,
   );
 
   const showResults =
@@ -183,7 +184,7 @@ export default function HostGamePage() {
           typeof quizData.backgroundImage === "string" &&
             quizData.backgroundImage.trim()
             ? quizData.backgroundImage
-            : undefined
+            : undefined,
         );
         setQuestionSet(questions);
         setQuestionIndex(1);
@@ -214,8 +215,8 @@ export default function HostGamePage() {
       setPlayers((prev) =>
         mergePlayers(
           data.players ?? [...prev, { name: data.name, score: 0 }],
-          prev
-        )
+          prev,
+        ),
       );
     };
 
@@ -223,8 +224,8 @@ export default function HostGamePage() {
       setPlayers((prev) =>
         mergePlayers(
           (data.players ?? prev).filter((p) => p.name !== data.name),
-          prev
-        )
+          prev,
+        ),
       );
     };
 
@@ -234,8 +235,8 @@ export default function HostGamePage() {
         prev.map((p) =>
           p.name === data.name
             ? { ...p, score: p.score + (data.points ?? 0) }
-            : p
-        )
+            : p,
+        ),
       );
     };
 
@@ -258,7 +259,7 @@ export default function HostGamePage() {
             correct: payload.correct,
             points: payload.points,
             timeLeftSec: payload.timeLeftSec,
-          })
+          }),
         );
         setAnswers(mapped);
       }
@@ -526,11 +527,7 @@ export default function HostGamePage() {
   };
 
   const requestEndGame = () => {
-    const confirmed = window.confirm(
-      "End the game now? This will stop the game for everyone and show final results."
-    );
-    if (!confirmed) return;
-    finalizeGame();
+    setShowEndGameConfirm(true);
   };
 
   const cancelAndExit = () => {
@@ -623,7 +620,7 @@ export default function HostGamePage() {
   };
 
   const activeBackgroundStyle = backgroundStyle(
-    backgroundImage || DEFAULT_BACKGROUND_IMAGE
+    backgroundImage || DEFAULT_BACKGROUND_IMAGE,
   );
   const backgroundClassName = BACKGROUND_BASE_CLASS;
 
@@ -702,5 +699,44 @@ export default function HostGamePage() {
     ),
   } satisfies Record<typeof stage, React.ReactNode>;
 
-  return screens[stage] ?? fallbackScreen;
+  return (
+    <>
+      {screens[stage] ?? fallbackScreen}
+      {showEndGameConfirm ? (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-6 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-3xl border border-white/10 bg-linear-to-br from-[#11142a] via-[#0f1224] to-[#141a33] p-6 text-white shadow-[0_30px_80px_rgba(0,0,0,0.45)]">
+            <div className="flex items-center justify-between">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-2xl">
+                ⚠️
+              </div>
+            </div>
+            <h2 className="mt-4 text-2xl font-bold">End the game now?</h2>
+            <p className="mt-2 text-sm text-white/70">
+              This will stop the game for everyone and show final results. You
+              can’t resume the match once it ends.
+            </p>
+            <div className="mt-6 flex flex-wrap justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setShowEndGameConfirm(false)}
+                className="rounded-full border border-white/20 px-5 py-2 text-sm font-semibold text-white/80 hover:border-white/40 hover:text-white"
+              >
+                Keep playing
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowEndGameConfirm(false);
+                  finalizeGame();
+                }}
+                className="rounded-full bg-red-500/90 px-5 py-2 text-sm font-semibold text-white shadow-[0_12px_24px_rgba(239,68,68,0.4)] hover:bg-red-500"
+              >
+                End game
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </>
+  );
 }

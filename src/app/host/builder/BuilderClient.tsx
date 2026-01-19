@@ -62,13 +62,13 @@ export function BuilderClient({ quizId }: BuilderClientProps) {
   >(undefined);
   const [builderTagsText, setBuilderTagsText] = useState("");
   const [builderQuizId, setBuilderQuizId] = useState<string | null>(
-    quizId ?? null
+    quizId ?? null,
   );
   const [builderQuestions, setBuilderQuestions] = useState<EditableQuestion[]>([
     {
       text: "Untitled question",
       options: ["", "", "", ""],
-      correctAnswers: [0],
+      correctAnswers: [],
       durationSec: DEFAULT_QUESTION_DURATION_SEC,
     },
   ]);
@@ -103,7 +103,7 @@ export function BuilderClient({ quizId }: BuilderClientProps) {
 
     if (!questionsSource) {
       throw new Error(
-        "Invalid JSON format. Expected an array of questions or an object with a `questions` array."
+        "Invalid JSON format. Expected an array of questions or an object with a `questions` array.",
       );
     }
 
@@ -118,7 +118,7 @@ export function BuilderClient({ quizId }: BuilderClientProps) {
 
     const normalizeImportedAnswers = (
       candidate: unknown,
-      options: string[]
+      options: string[],
     ): number[] => {
       const indices = new Set<number>();
 
@@ -135,7 +135,9 @@ export function BuilderClient({ quizId }: BuilderClientProps) {
           if (!trimmed) return undefined;
           const letterMatch = trimmed.match(/^[a-d]$/i);
           if (letterMatch) {
-            return letterMatch[0].toLowerCase().charCodeAt(0) - "a".charCodeAt(0);
+            return (
+              letterMatch[0].toLowerCase().charCodeAt(0) - "a".charCodeAt(0)
+            );
           }
           const asNum = Number(trimmed);
           if (Number.isFinite(asNum)) {
@@ -200,7 +202,7 @@ export function BuilderClient({ quizId }: BuilderClientProps) {
               : obj.answer;
       const correctAnswers = normalizeImportedAnswers(candidate, options);
       const durationSec = normalizeDurationSec(
-        typeof obj.durationSec !== "undefined" ? obj.durationSec : obj.duration
+        typeof obj.durationSec !== "undefined" ? obj.durationSec : obj.duration,
       );
 
       const media =
@@ -363,7 +365,7 @@ export function BuilderClient({ quizId }: BuilderClientProps) {
       setBuilderBackgroundImage(
         typeof backgroundImage === "string" && backgroundImage.trim()
           ? backgroundImage
-          : undefined
+          : undefined,
       );
       setBuilderTagsText(normalizeTags(tags).join(", "));
       setBuilderQuestions(questions);
@@ -376,7 +378,9 @@ export function BuilderClient({ quizId }: BuilderClientProps) {
       const { questions } = parseRawQuizText(text);
       if (questions.length === 0) {
         const message =
-          error instanceof Error ? error.message : "Invalid JSON or raw quiz format.";
+          error instanceof Error
+            ? error.message
+            : "Invalid JSON or raw quiz format.";
         throw new Error(message);
       }
       setBuilderQuestions(questions);
@@ -409,7 +413,9 @@ export function BuilderClient({ quizId }: BuilderClientProps) {
         if (!active) return;
         setBuilderTitle(quiz.title || "Untitled Quiz");
         setBuilderBackgroundImage(
-          typeof quiz.backgroundImage === "string" ? quiz.backgroundImage : undefined
+          typeof quiz.backgroundImage === "string"
+            ? quiz.backgroundImage
+            : undefined,
         );
         setBuilderTagsText(normalizeTags(quiz.tags).join(", "));
         setBuilderQuestions(
@@ -417,12 +423,14 @@ export function BuilderClient({ quizId }: BuilderClientProps) {
             text: q.text,
             options: q.options,
             correctAnswers: normalizeCorrectAnswers(
-              typeof q.correctAnswers !== "undefined" ? q.correctAnswers : q.correctAnswer,
-              Array.isArray(q.options) ? q.options : ["", "", "", ""]
+              typeof q.correctAnswers !== "undefined"
+                ? q.correctAnswers
+                : q.correctAnswer,
+              Array.isArray(q.options) ? q.options : ["", "", "", ""],
             ),
             durationSec: normalizeDurationSec(q.durationSec),
             media: q.media,
-          }))
+          })),
         );
         setBuilderIndex(0);
         deletedQuestionStackRef.current = [];
@@ -457,7 +465,7 @@ export function BuilderClient({ quizId }: BuilderClientProps) {
           {
             text: "Untitled question",
             options: ["", "", "", ""],
-            correctAnswers: [0],
+            correctAnswers: [],
             durationSec: DEFAULT_QUESTION_DURATION_SEC,
           },
         ];
@@ -492,7 +500,10 @@ export function BuilderClient({ quizId }: BuilderClientProps) {
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
       if (event.repeat) return;
-      if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== "z") {
+      if (
+        !(event.metaKey || event.ctrlKey) ||
+        event.key.toLowerCase() !== "z"
+      ) {
         return;
       }
       if (event.shiftKey) return;
@@ -500,7 +511,9 @@ export function BuilderClient({ quizId }: BuilderClientProps) {
       const target = event.target as HTMLElement | null;
       const tagName = target?.tagName?.toLowerCase();
       const isTextInput =
-        tagName === "input" || tagName === "textarea" || target?.isContentEditable;
+        tagName === "input" ||
+        tagName === "textarea" ||
+        target?.isContentEditable;
       if (isTextInput) return;
 
       event.preventDefault();
@@ -521,7 +534,9 @@ export function BuilderClient({ quizId }: BuilderClientProps) {
     }));
     const tags = normalizeTags(builderTagsText);
 
-    const url = builderQuizId ? `/api/quizzes/${builderQuizId}` : "/api/quizzes";
+    const url = builderQuizId
+      ? `/api/quizzes/${builderQuizId}`
+      : "/api/quizzes";
     const method = builderQuizId ? "PUT" : "POST";
 
     const res = await fetch(url, {
@@ -578,8 +593,8 @@ export function BuilderClient({ quizId }: BuilderClientProps) {
               prev.map((q, i) =>
                 i === builderIndex
                   ? { ...q, media: { kind, src: dataUrl, mime: file.type } }
-                  : q
-              )
+                  : q,
+              ),
             );
           } finally {
             e.target.value = "";
@@ -628,12 +643,6 @@ export function BuilderClient({ quizId }: BuilderClientProps) {
           <div className="w-full max-w-2xl rounded-2xl bg-white text-gray-900 shadow-2xl">
             <div className="flex items-center justify-between border-b px-6 py-4">
               <h2 className="text-lg font-semibold">Paste JSON</h2>
-              <button
-                onClick={() => setShowJsonPaste(false)}
-                className="rounded-md border border-gray-200 px-3 py-1 text-gray-600"
-              >
-                Close
-              </button>
             </div>
             <div className="space-y-4 p-6">
               <textarea
@@ -690,7 +699,7 @@ export function BuilderClient({ quizId }: BuilderClientProps) {
             {
               text: "New question",
               options: ["", "", "", ""],
-              correctAnswers: [0],
+              correctAnswers: [],
               durationSec: DEFAULT_QUESTION_DURATION_SEC,
             },
           ])
@@ -707,19 +716,23 @@ export function BuilderClient({ quizId }: BuilderClientProps) {
           });
           setBuilderIndex((prevIndex) => {
             if (prevIndex === fromIndex) return toIndex;
-            if (fromIndex < prevIndex && toIndex >= prevIndex) return prevIndex - 1;
-            if (fromIndex > prevIndex && toIndex <= prevIndex) return prevIndex + 1;
+            if (fromIndex < prevIndex && toIndex >= prevIndex)
+              return prevIndex - 1;
+            if (fromIndex > prevIndex && toIndex <= prevIndex)
+              return prevIndex + 1;
             return prevIndex;
           });
         }}
         onUpdateQuestionText={(text) =>
           setBuilderQuestions((prev) =>
-            prev.map((q, i) => (i === builderIndex ? { ...q, text } : q))
+            prev.map((q, i) => (i === builderIndex ? { ...q, text } : q)),
           )
         }
         onUpdateDuration={(durationSec) =>
           setBuilderQuestions((prev) =>
-            prev.map((q, i) => (i === builderIndex ? { ...q, durationSec } : q))
+            prev.map((q, i) =>
+              i === builderIndex ? { ...q, durationSec } : q,
+            ),
           )
         }
         onUpdateOption={(optionIndex, value) =>
@@ -729,11 +742,11 @@ export function BuilderClient({ quizId }: BuilderClientProps) {
                 ? {
                     ...q,
                     options: q.options.map((o, oi) =>
-                      oi === optionIndex ? value : o
+                      oi === optionIndex ? value : o,
                     ),
                   }
-                : q
-            )
+                : q,
+            ),
           )
         }
         onToggleCorrect={(optionIndex) =>
@@ -745,14 +758,13 @@ export function BuilderClient({ quizId }: BuilderClientProps) {
               const next = has
                 ? current.filter((idx) => idx !== optionIndex)
                 : [...current, optionIndex];
-              const normalized = next.length > 0 ? next : [optionIndex];
-              return { ...q, correctAnswers: normalized.sort((a, b) => a - b) };
-            })
+              return { ...q, correctAnswers: next.sort((a, b) => a - b) };
+            }),
           )
         }
         onSetMedia={(media) =>
           setBuilderQuestions((prev) =>
-            prev.map((q, i) => (i === builderIndex ? { ...q, media } : q))
+            prev.map((q, i) => (i === builderIndex ? { ...q, media } : q)),
           )
         }
         onCancel={() => router.push("/host")}

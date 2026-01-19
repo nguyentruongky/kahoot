@@ -19,19 +19,9 @@ export function HostConsoleHeader({
         <div className="w-10 h-10 rounded-xl bg-linear-to-br from-purple-500 to-pink-500 flex items-center justify-center text-xl font-bold">
           K
         </div>
-       
       </div>
 
       <div className="flex items-center gap-2">
-        <button
-          onClick={onGoDashboard}
-          className={`px-4 py-2 rounded-lg text-sm font-semibold ${
-            stage === "dashboard" ? "bg-white text-black" : "border border-white/20"
-          }`}
-        >
-          Dashboard
-        </button>
-
         <button
           onClick={onCreate}
           className="px-4 py-2 rounded-lg text-sm font-semibold bg-linear-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"

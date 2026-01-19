@@ -6,7 +6,7 @@ import {
   quizzaShapeForIndex,
   QuizzaShapeIcon,
 } from "@/components/QuizzaShapeIcon";
-import { padOptions, trimTrailingEmptyOptions } from "@/lib/quizDefaults";
+import { padOptions } from "@/lib/quizDefaults";
 import { BACKGROUND_BASE_CLASS, backgroundStyle } from "@/lib/backgrounds";
 
 type EditableQuestion = {
@@ -86,11 +86,7 @@ export function HostBuilderScreen({
   onSave,
 }: HostBuilderScreenProps) {
   const active = builderQuestions[builderIndex];
-  const visibleOptions = trimTrailingEmptyOptions(active?.options ?? []);
-  const optionsForEdit =
-    visibleOptions.length === 0
-      ? padOptions(visibleOptions, 2)
-      : visibleOptions;
+  const optionsForEdit = padOptions(active?.options ?? [], 4);
   const optionEntries = optionsForEdit.map((opt, index) => ({ opt, index }));
   const optionColors = ["#f97316", "#2563eb", "#0d9488", "#f59e0b"];
   const hasBackground = Boolean(builderBackgroundImage);
@@ -282,14 +278,6 @@ export function HostBuilderScreen({
                 <div className="absolute inset-0 bg-linear-to-br from-slate-900/70 via-slate-950/80 to-slate-900/70" />
               )}
               <div className="relative">
-                {!hasBackground ? (
-                  <div className="mb-5 flex w-full items-center justify-between rounded-2xl border border-dashed border-(--builder-border) bg-slate-950/60 px-4 py-3 text-sm text-(--builder-muted)">
-                    Upload a background with the camera button to set the mood.
-                    <span className="text-xs uppercase tracking-[0.2em] text-(--builder-muted)">
-                      Optional
-                    </span>
-                  </div>
-                ) : null}
                 <input
                   value={active?.text || ""}
                   onChange={(e) => onUpdateQuestionText(e.target.value)}
@@ -321,7 +309,7 @@ export function HostBuilderScreen({
                           ),
                         )
                       }
-                      className="w-24 rounded-xl border border-(--builder-border) bg-slate-900 px-3 py-2 text-right text-base font-semibold text-white"
+                      className="w-24 rounded-xl border border-(--builder-border) bg-slate-900 px-3 py-2 text-center text-base font-semibold text-white "
                     />
                   </div>
                 </div>

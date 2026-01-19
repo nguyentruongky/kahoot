@@ -4,6 +4,7 @@ export interface Player {
 }
 
 export type QuizQuestion = {
+  id?: number;
   text: string;
   options: string[];
   correctAnswers: number[];

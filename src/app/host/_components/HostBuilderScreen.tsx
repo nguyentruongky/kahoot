@@ -23,9 +23,11 @@ type HostBuilderScreenProps = {
   backgroundInputRef?: RefObject<HTMLInputElement | null>;
   builderTitle: string;
   builderBackgroundImage?: string;
+  builderTagsText: string;
   builderQuestions: EditableQuestion[];
   builderIndex: number;
   onBuilderTitleChange: (value: string) => void;
+  onBuilderTagsChange: (value: string) => void;
   onSetBackgroundImage: (value?: string) => void;
   onSelectQuestion: (index: number) => void;
   onAddQuestion: () => void;
@@ -49,9 +51,11 @@ export function HostBuilderScreen({
   backgroundInputRef,
   builderTitle,
   builderBackgroundImage,
+  builderTagsText,
   builderQuestions,
   builderIndex,
   onBuilderTitleChange,
+  onBuilderTagsChange,
   onSetBackgroundImage,
   onSelectQuestion,
   onAddQuestion,
@@ -91,6 +95,12 @@ export function HostBuilderScreen({
               onChange={(e) => onBuilderTitleChange(e.target.value)}
               className="text-2xl font-bold outline-none w-full"
               placeholder="Quiz title"
+            />
+            <input
+              value={builderTagsText}
+              onChange={(e) => onBuilderTagsChange(e.target.value)}
+              className="mt-2 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700"
+              placeholder="Tags (comma separated)"
             />
           </div>
         </div>

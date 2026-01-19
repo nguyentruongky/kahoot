@@ -63,6 +63,7 @@ const normalizeQuizBody = (raw: unknown) => {
     title?: unknown;
     questions?: unknown;
     backgroundImage?: unknown;
+    tags?: unknown;
   };
   const title = typeof body.title === "string" ? body.title.trim() : "";
   if (!title) {
@@ -140,7 +141,28 @@ const normalizeQuizBody = (raw: unknown) => {
 
   const backgroundImage = normalizeBackgroundImage(body.backgroundImage);
 
-  return { title, questions, backgroundImage };
+  const normalizeTags = (candidate: unknown): string[] => {
+    const rawTags = Array.isArray(candidate)
+      ? candidate
+      : typeof candidate === "string"
+        ? candidate.split(",")
+        : [];
+    const seen = new Set<string>();
+    const tags: string[] = [];
+    for (const rawTag of rawTags) {
+      const tag = String(rawTag ?? "").trim();
+      if (!tag) continue;
+      const key = tag.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      tags.push(tag);
+    }
+    return tags.slice(0, 12);
+  };
+
+  const tags = normalizeTags(body.tags);
+
+  return { title, questions, backgroundImage, tags };
 };
 
 const toClientQuiz = (quiz: any) => {
@@ -166,6 +188,9 @@ const toClientQuiz = (quiz: any) => {
   return {
     ...quiz,
     backgroundImage: normalizeBackgroundImage(quiz.backgroundImage) ?? undefined,
+    tags: Array.isArray(quiz.tags)
+      ? quiz.tags.map((tag: any) => String(tag ?? "")).filter((tag: string) => tag)
+      : [],
     questions: Array.isArray(quiz.questions)
       ? quiz.questions.map(normalizeFromStored)
       : [],

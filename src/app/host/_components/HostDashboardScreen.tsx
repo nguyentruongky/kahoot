@@ -9,6 +9,10 @@ type HostDashboardScreenProps = {
   searchTerm: string;
   onSearchTermChange: (value: string) => void;
   quizzes: any[];
+  availableTags: string[];
+  selectedTags: string[];
+  onToggleTag: (tag: string) => void;
+  onClearTags: () => void;
   loadingQuizzes: boolean;
   deletingQuizId: string | null;
   onCreateNewQuiz: () => void;
@@ -21,6 +25,10 @@ export function HostDashboardScreen({
   searchTerm,
   onSearchTermChange,
   quizzes,
+  availableTags,
+  selectedTags,
+  onToggleTag,
+  onClearTags,
   loadingQuizzes,
   deletingQuizId,
   onCreateNewQuiz,
@@ -118,7 +126,40 @@ export function HostDashboardScreen({
           </div>
         </div>
 
-        {loadingQuizzes ? (
+        {availableTags.length > 0 ? (
+          <div className="flex flex-wrap items-center gap-2">
+            {availableTags.map((tag) => {
+              const active = selectedTags.some(
+                (value) => value.toLowerCase() === tag.toLowerCase()
+              );
+              return (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => onToggleTag(tag)}
+                  className={`rounded-full border px-3 py-1 text-sm transition ${
+                    active
+                      ? "border-purple-300 bg-purple-500/30 text-white"
+                      : "border-white/10 bg-white/5 text-white/70 hover:border-white/30"
+                  }`}
+                >
+                  #{tag}
+                </button>
+              );
+            })}
+            {selectedTags.length > 0 ? (
+              <button
+                type="button"
+                onClick={onClearTags}
+                className="rounded-full border border-white/10 px-3 py-1 text-sm text-white/70 hover:border-white/30"
+              >
+                Clear filters
+              </button>
+            ) : null}
+          </div>
+        ) : null}
+
+        {loadingQuizzes && quizzes.length === 0 ? (
           <div className="rounded-2xl border border-white/10 bg-white/5 p-8 text-center text-white/70">
             Loading quizzes…
           </div>
@@ -143,6 +184,18 @@ export function HostDashboardScreen({
               <p className="text-sm text-white/60">
                 {(quiz.questions || []).length} Questions
               </p>
+              {Array.isArray(quiz.tags) && quiz.tags.length > 0 ? (
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {quiz.tags.slice(0, 6).map((tag: string) => (
+                    <span
+                      key={tag}
+                      className="rounded-full bg-white/10 px-2 py-0.5 text-xs text-white/70"
+                    >
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
 
               <div className="flex items-center gap-2 mt-3">
                 <button
@@ -168,6 +221,11 @@ export function HostDashboardScreen({
               </div>
             </div>
             ))}
+            {loadingQuizzes ? (
+              <div className="col-span-3 text-sm text-white/50">
+                Refreshing latest quizzes…
+              </div>
+            ) : null}
           </div>
         )}
       </main>

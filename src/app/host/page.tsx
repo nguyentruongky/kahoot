@@ -11,6 +11,7 @@ import { HostLobbyScreen } from "@/app/host/_components/HostLobbyScreen";
 import { HostQuestionScreen } from "@/app/host/_components/HostQuestionScreen";
 import { HostFinalScreen } from "@/app/host/_components/HostFinalScreen";
 import { normalizeCorrectAnswers } from "@/lib/quizDefaults";
+import { readCachedQuizzes, writeCachedQuizzes } from "@/lib/quizzesCache";
 
 const DEFAULT_QUESTION_DURATION_SEC = 20;
 const DEFAULT_QUESTION_DURATION_MS = DEFAULT_QUESTION_DURATION_SEC * 1000;
@@ -44,6 +45,25 @@ const normalizeDurationSec = (candidate: unknown) => {
   return value;
 };
 
+const normalizeTags = (candidate: unknown): string[] => {
+  const rawTags = Array.isArray(candidate)
+    ? candidate
+    : typeof candidate === "string"
+      ? candidate.split(",")
+      : [];
+  const seen = new Set<string>();
+  const tags: string[] = [];
+  for (const rawTag of rawTags) {
+    const tag = String(rawTag ?? "").trim();
+    if (!tag) continue;
+    const key = tag.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    tags.push(tag);
+  }
+  return tags.slice(0, 12);
+};
+
 export default function HostPage() {
   const router = useRouter();
   const endQuestionSentRef = useRef(false);
@@ -72,12 +92,14 @@ export default function HostPage() {
 
   // SEARCH
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   // BUILDER
   const [builderTitle, setBuilderTitle] = useState("");
   const [builderBackgroundImage, setBuilderBackgroundImage] = useState<
     string | undefined
   >(undefined);
+  const [builderTagsText, setBuilderTagsText] = useState("");
   const [builderQuizId, setBuilderQuizId] = useState<string | null>(null);
   const [builderQuestions, setBuilderQuestions] = useState<EditableQuestion[]>([
     {
@@ -107,6 +129,7 @@ export default function HostPage() {
       const res = await fetch("/api/quizzes");
       const data = await res.json();
       setQuizzes(data);
+      writeCachedQuizzes(Array.isArray(data) ? data : []);
     } finally {
       setLoadingQuizzes(false);
     }
@@ -143,6 +166,7 @@ export default function HostPage() {
             questions: unknown;
             title?: unknown;
             backgroundImage?: unknown;
+            tags?: unknown;
           })
         : null;
 
@@ -291,6 +315,7 @@ export default function HostPage() {
         payload && typeof payload.backgroundImage === "string"
           ? payload.backgroundImage
           : undefined,
+      tags: payload?.tags,
       questions,
     };
   };
@@ -405,7 +430,7 @@ export default function HostPage() {
   const applyImportedText = (text: string) => {
     try {
       const parsed = JSON.parse(text) as unknown;
-      const { title, questions, backgroundImage } =
+      const { title, questions, backgroundImage, tags } =
         normalizeImportedQuestions(parsed);
       if (title) setBuilderTitle(title);
       setBuilderBackgroundImage(
@@ -413,6 +438,7 @@ export default function HostPage() {
           ? backgroundImage
           : undefined
       );
+      setBuilderTagsText(normalizeTags(tags).join(", "));
       setBuilderQuestions(questions);
       setBuilderIndex(0);
       setBuilderQuizId(null);
@@ -433,6 +459,7 @@ export default function HostPage() {
       setBuilderIndex(0);
       setBuilderQuizId(null);
       setBuilderBackgroundImage(undefined);
+      setBuilderTagsText("");
       deletedQuestionStackRef.current = [];
       setDeletedQuestionStackSize(0);
       setStage("builder");
@@ -441,7 +468,25 @@ export default function HostPage() {
 
   // INITIALIZE
   useEffect(() => {
-    refreshQuizzes();
+    let active = true;
+    let networkLoaded = false;
+    readCachedQuizzes().then((cached) => {
+      if (!active || networkLoaded) return;
+      if (cached && cached.length > 0) {
+        setQuizzes(cached);
+      }
+    });
+    const load = async () => {
+      try {
+        await refreshQuizzes();
+      } finally {
+        networkLoaded = true;
+      }
+    };
+    load();
+    return () => {
+      active = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -663,6 +708,7 @@ export default function HostPage() {
     setBuilderBackgroundImage(
       typeof quiz.backgroundImage === "string" ? quiz.backgroundImage : undefined
     );
+    setBuilderTagsText(normalizeTags(quiz.tags).join(", "));
     setBuilderQuestions(
       (quiz.questions || []).map((q: any) => ({
         text: q.text,
@@ -685,6 +731,7 @@ export default function HostPage() {
     setBuilderQuizId(null);
     setBuilderTitle("New Quiz");
     setBuilderBackgroundImage(undefined);
+    setBuilderTagsText("");
     setBuilderQuestions([
       {
         text: "Untitled question",
@@ -779,6 +826,7 @@ export default function HostPage() {
       durationSec: normalizeDurationSec(q.durationSec),
       media: q.media,
     }));
+    const tags = normalizeTags(builderTagsText);
 
     const url = builderQuizId
       ? `/api/quizzes/${builderQuizId}`
@@ -791,6 +839,7 @@ export default function HostPage() {
       body: JSON.stringify({
         title: builderTitle,
         backgroundImage: builderBackgroundImage ?? null,
+        tags,
         questions: sanitized,
       }),
     });
@@ -806,10 +855,49 @@ export default function HostPage() {
   };
 
   const filteredQuizzes = useMemo(() => {
-    return quizzes.filter((q) =>
-      q.title.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [quizzes, searchTerm]);
+    const normalizedTerm = searchTerm.trim().toLowerCase();
+    const normalizedSelected = selectedTags.map((tag) => tag.toLowerCase());
+
+    return quizzes.filter((q) => {
+      const title = String(q.title ?? "").toLowerCase();
+      const tags = Array.isArray(q.tags)
+        ? q.tags.map((tag: string) => String(tag ?? ""))
+        : [];
+      const tagsLower = tags.map((tag) => tag.toLowerCase());
+      const matchesTerm =
+        !normalizedTerm ||
+        title.includes(normalizedTerm) ||
+        tagsLower.some((tag) => tag.includes(normalizedTerm));
+      const matchesTags =
+        normalizedSelected.length === 0 ||
+        normalizedSelected.every((tag) => tagsLower.includes(tag));
+      return matchesTerm && matchesTags;
+    });
+  }, [quizzes, searchTerm, selectedTags]);
+
+  const availableTags = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const quiz of quizzes) {
+      if (!Array.isArray(quiz.tags)) continue;
+      for (const raw of quiz.tags) {
+        const tag = String(raw ?? "").trim();
+        if (!tag) continue;
+        const key = tag.toLowerCase();
+        if (!seen.has(key)) seen.set(key, tag);
+      }
+    }
+    return Array.from(seen.values()).sort((a, b) => a.localeCompare(b));
+  }, [quizzes]);
+
+  const toggleTagFilter = (tag: string) => {
+    setSelectedTags((prev) => {
+      const exists = prev.some((value) => value.toLowerCase() === tag.toLowerCase());
+      if (exists) {
+        return prev.filter((value) => value.toLowerCase() !== tag.toLowerCase());
+      }
+      return [...prev, tag];
+    });
+  };
 
   const screens = {
     dashboard: (
@@ -817,6 +905,10 @@ export default function HostPage() {
         searchTerm={searchTerm}
         onSearchTermChange={setSearchTerm}
         quizzes={filteredQuizzes}
+        availableTags={availableTags}
+        selectedTags={selectedTags}
+        onToggleTag={toggleTagFilter}
+        onClearTags={() => setSelectedTags([])}
         loadingQuizzes={loadingQuizzes}
         deletingQuizId={deletingQuizId}
         onCreateNewQuiz={createNewQuiz}
@@ -832,9 +924,11 @@ export default function HostPage() {
         backgroundInputRef={backgroundInputRef}
         builderTitle={builderTitle}
         builderBackgroundImage={builderBackgroundImage}
+        builderTagsText={builderTagsText}
         builderQuestions={builderQuestions}
         builderIndex={builderIndex}
         onBuilderTitleChange={setBuilderTitle}
+        onBuilderTagsChange={setBuilderTagsText}
         onSetBackgroundImage={setBuilderBackgroundImage}
         onSelectQuestion={setBuilderIndex}
         onAddQuestion={() =>

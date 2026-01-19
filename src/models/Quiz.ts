@@ -17,6 +17,7 @@ const QuizSchema = new mongoose.Schema({
   title: { type: String, required: true },
   questions: { type: [QuestionSchema], required: true },
   backgroundImage: { type: String, required: false },
+  tags: { type: [String], required: false, default: [] },
   ownerId: { type: mongoose.Schema.Types.ObjectId, ref: "User", index: true },
 });
 

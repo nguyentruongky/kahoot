@@ -6,7 +6,8 @@ export interface Player {
 export type QuizQuestion = {
   text: string;
   options: string[];
-  correctAnswer: number;
+  correctAnswers: number[];
+  durationSec?: number;
   media?: { kind: "image" | "video"; src: string; mime?: string };
 };
 
@@ -20,7 +21,7 @@ export type PlayerAnswerPayload = {
 
 export type EndQuestionPayload = {
   questionId?: number;
-  correctAnswer?: number;
+  correctAnswers?: number[];
   results?: Record<
     string,
     { answer: number; correct: boolean; points: number; timeLeftSec: number }

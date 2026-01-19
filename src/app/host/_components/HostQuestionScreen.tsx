@@ -10,7 +10,7 @@ import { trimTrailingEmptyOptions } from "@/lib/quizDefaults";
 type Question = {
   text: string;
   options: string[];
-  correctAnswer: number;
+  correctAnswers: number[];
 };
 
 type HostQuestionScreenProps = {
@@ -47,6 +47,7 @@ export function HostQuestionScreen({
   const optionEntries = trimTrailingEmptyOptions(currentQuestion.options)
     .map((opt, index) => ({ opt, index }))
     .filter((entry) => entry.opt.trim() !== "");
+  const correctAnswers = currentQuestion.correctAnswers ?? [];
 
   return (
     <div className="bg-white text-gray-900 rounded-3xl shadow-2xl p-6">
@@ -120,7 +121,7 @@ export function HostQuestionScreen({
           {optionEntries.map(({ opt, index }) => {
             const count = answers.filter((a) => a.answer === index).length;
             const percentage = answers.length ? (count / answers.length) * 100 : 0;
-            const isCorrect = index === currentQuestion.correctAnswer;
+            const isCorrect = correctAnswers.includes(index);
 
             return (
               <div

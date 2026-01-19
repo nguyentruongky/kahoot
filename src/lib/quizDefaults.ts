@@ -59,3 +59,65 @@ export const normalizeCorrectAnswer = (
 
   return 0;
 };
+
+const parseAnswerIndex = (
+  raw: string,
+  options: string[]
+): number | undefined => {
+  const trimmed = raw.trim();
+  if (!trimmed) return undefined;
+
+  const asNum = Number(trimmed);
+  if (Number.isFinite(asNum)) {
+    const idx = Math.trunc(asNum);
+    if (idx >= 0 && idx < options.length) return idx;
+    if (idx - 1 >= 0 && idx - 1 < options.length) return idx - 1;
+  }
+
+  const byText = options.findIndex((o) => o === trimmed);
+  if (byText >= 0) return byText;
+
+  if (options.length === 2) {
+    const lowered = trimmed.toLowerCase();
+    if (TRUE_LABELS.has(lowered)) return 0;
+    if (FALSE_LABELS.has(lowered)) return 1;
+  }
+
+  return undefined;
+};
+
+export const normalizeCorrectAnswers = (
+  candidate: unknown,
+  options: string[]
+): number[] => {
+  const indices = new Set<number>();
+
+  const addIndex = (value: unknown) => {
+    if (typeof value === "number" && Number.isFinite(value)) {
+      const idx = Math.trunc(value);
+      if (idx >= 0 && idx < options.length) indices.add(idx);
+      else if (idx - 1 >= 0 && idx - 1 < options.length) indices.add(idx - 1);
+      return;
+    }
+
+    if (typeof value === "string") {
+      const parts = value.split(/[,\|;]/g).map((part) => part.trim());
+      for (const part of parts) {
+        const parsed = parseAnswerIndex(part, options);
+        if (typeof parsed === "number") indices.add(parsed);
+      }
+    }
+  };
+
+  if (Array.isArray(candidate)) {
+    candidate.forEach(addIndex);
+  } else if (typeof candidate !== "undefined") {
+    addIndex(candidate);
+  }
+
+  if (indices.size === 0) {
+    indices.add(normalizeCorrectAnswer(candidate, options));
+  }
+
+  return Array.from(indices).sort((a, b) => a - b);
+};

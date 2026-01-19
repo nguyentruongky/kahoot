@@ -10,9 +10,10 @@ import { HostBuilderScreen } from "@/app/host/_components/HostBuilderScreen";
 import { HostLobbyScreen } from "@/app/host/_components/HostLobbyScreen";
 import { HostQuestionScreen } from "@/app/host/_components/HostQuestionScreen";
 import { HostFinalScreen } from "@/app/host/_components/HostFinalScreen";
+import { normalizeCorrectAnswers } from "@/lib/quizDefaults";
 
-const QUESTION_DURATION_SEC = 20;
-const QUESTION_DURATION_MS = QUESTION_DURATION_SEC * 1000;
+const DEFAULT_QUESTION_DURATION_SEC = 20;
+const DEFAULT_QUESTION_DURATION_MS = DEFAULT_QUESTION_DURATION_SEC * 1000;
 
 interface Player {
   name: string;
@@ -24,8 +25,23 @@ type HostStage = "dashboard" | "builder" | "lobby" | "question" | "final";
 type EditableQuestion = {
   text: string;
   options: string[];
-  correctAnswer: number;
+  correctAnswers: number[];
+  durationSec: number;
   media?: { kind: "image" | "video"; src: string; mime?: string };
+};
+
+const normalizeDurationSec = (candidate: unknown) => {
+  const raw =
+    typeof candidate === "number"
+      ? candidate
+      : typeof candidate === "string" && candidate.trim() !== ""
+        ? Number(candidate)
+        : NaN;
+  if (!Number.isFinite(raw)) return DEFAULT_QUESTION_DURATION_SEC;
+  const value = Math.trunc(raw);
+  if (value < 5) return 5;
+  if (value > 300) return 300;
+  return value;
 };
 
 export default function HostPage() {
@@ -49,8 +65,8 @@ export default function HostPage() {
   const [currentQuestion, setCurrentQuestion] = useState<any>(null);
   const [answers, setAnswers] = useState<any[]>([]);
   const [showResults, setShowResults] = useState(false);
-  const [timer, setTimer] = useState(QUESTION_DURATION_SEC);
-  const [timerMs, setTimerMs] = useState(QUESTION_DURATION_MS);
+  const [timer, setTimer] = useState(DEFAULT_QUESTION_DURATION_SEC);
+  const [timerMs, setTimerMs] = useState(DEFAULT_QUESTION_DURATION_MS);
   const [gameEnded, setGameEnded] = useState(false);
   const [finalResults, setFinalResults] = useState<Player[]>([]);
 
@@ -64,7 +80,12 @@ export default function HostPage() {
   >(undefined);
   const [builderQuizId, setBuilderQuizId] = useState<string | null>(null);
   const [builderQuestions, setBuilderQuestions] = useState<EditableQuestion[]>([
-    { text: "Untitled question", options: ["", "", "", ""], correctAnswer: 0 },
+    {
+      text: "Untitled question",
+      options: ["", "", "", ""],
+      correctAnswers: [0],
+      durationSec: DEFAULT_QUESTION_DURATION_SEC,
+    },
   ]);
   const [builderIndex, setBuilderIndex] = useState(0);
   const deletedQuestionStackRef = useRef<
@@ -146,21 +167,65 @@ export default function HostPage() {
       return trimmed;
     };
 
-    const normalizeCorrectIndex = (candidate: unknown, optionCount: number) => {
-      const num =
-        typeof candidate === "number"
-          ? candidate
-          : typeof candidate === "string" && candidate.trim() !== ""
-          ? Number(candidate)
-          : NaN;
+    const normalizeCorrectAnswers = (
+      candidate: unknown,
+      options: string[]
+    ): number[] => {
+      const indices = new Set<number>();
 
-      if (Number.isFinite(num)) {
-        const idx = Math.trunc(num);
-        if (idx >= 0 && idx < optionCount) return idx; // 0-based
-        if (idx - 1 >= 0 && idx - 1 < optionCount) return idx - 1; // 1-based
+      const parseIndex = (value: unknown): number | undefined => {
+        if (typeof value === "number" && Number.isFinite(value)) {
+          const idx = Math.trunc(value);
+          if (idx >= 0 && idx < options.length) return idx;
+          if (idx - 1 >= 0 && idx - 1 < options.length) return idx - 1;
+          return undefined;
+        }
+
+        if (typeof value === "string") {
+          const trimmed = value.trim();
+          if (!trimmed) return undefined;
+          const letterMatch = trimmed.match(/^[a-d]$/i);
+          if (letterMatch) {
+            return letterMatch[0].toLowerCase().charCodeAt(0) - "a".charCodeAt(0);
+          }
+          const asNum = Number(trimmed);
+          if (Number.isFinite(asNum)) {
+            const idx = Math.trunc(asNum);
+            if (idx >= 0 && idx < options.length) return idx;
+            if (idx - 1 >= 0 && idx - 1 < options.length) return idx - 1;
+          }
+          const byText = options.findIndex((opt) => opt === trimmed);
+          if (byText >= 0) return byText;
+        }
+
+        return undefined;
+      };
+
+      const addValue = (value: unknown) => {
+        if (typeof value === "string" && /[,;|]/.test(value)) {
+          value
+            .split(/[,;|]/g)
+            .map((part) => part.trim())
+            .filter(Boolean)
+            .forEach((part) => {
+              const idx = parseIndex(part);
+              if (typeof idx === "number") indices.add(idx);
+            });
+          return;
+        }
+        const idx = parseIndex(value);
+        if (typeof idx === "number") indices.add(idx);
+      };
+
+      if (Array.isArray(candidate)) {
+        candidate.forEach(addValue);
+      } else if (typeof candidate !== "undefined") {
+        addValue(candidate);
       }
 
-      return 0;
+      if (indices.size === 0) indices.add(0);
+
+      return Array.from(indices).sort((a, b) => a - b);
     };
 
     const questions: EditableQuestion[] = [];
@@ -176,19 +241,18 @@ export default function HostPage() {
 
       const options = normalizeOptions(obj.options ?? obj.choices);
 
-      let correctAnswer = 0;
-      if (typeof obj.correctAnswer !== "undefined") {
-        correctAnswer = normalizeCorrectIndex(obj.correctAnswer, options.length);
-      } else if (typeof obj.answerIndex !== "undefined") {
-        correctAnswer = normalizeCorrectIndex(obj.answerIndex, options.length);
-      } else if (typeof obj.answer !== "undefined") {
-        if (typeof obj.answer === "string") {
-          const idx = options.findIndex((opt) => opt === obj.answer);
-          correctAnswer = idx >= 0 ? idx : 0;
-        } else {
-          correctAnswer = normalizeCorrectIndex(obj.answer, options.length);
-        }
-      }
+      const candidate =
+        typeof obj.correctAnswers !== "undefined"
+          ? obj.correctAnswers
+          : typeof obj.correctAnswer !== "undefined"
+            ? obj.correctAnswer
+            : typeof obj.answerIndex !== "undefined"
+              ? obj.answerIndex
+              : obj.answer;
+      const correctAnswers = normalizeCorrectAnswers(candidate, options);
+      const durationSec = normalizeDurationSec(
+        typeof obj.durationSec !== "undefined" ? obj.durationSec : obj.duration
+      );
 
       const media =
         obj.media && typeof obj.media === "object"
@@ -202,9 +266,15 @@ export default function HostPage() {
       const mime = typeof media?.mime === "string" ? media.mime : undefined;
 
       if (kind && src) {
-        questions.push({ text, options, correctAnswer, media: { kind, src, mime } });
+        questions.push({
+          text,
+          options,
+          correctAnswers,
+          durationSec,
+          media: { kind, src, mime },
+        });
       } else {
-        questions.push({ text, options, correctAnswer });
+        questions.push({ text, options, correctAnswers, durationSec });
       }
     }
 
@@ -324,7 +394,8 @@ export default function HostPage() {
       questions.push({
         text: questionText || "Untitled question",
         options: normalizedOptions,
-        correctAnswer: normalizedAnswer,
+        correctAnswers: [normalizedAnswer],
+        durationSec: DEFAULT_QUESTION_DURATION_SEC,
       });
     }
 
@@ -334,7 +405,8 @@ export default function HostPage() {
   const applyImportedText = (text: string) => {
     try {
       const parsed = JSON.parse(text) as unknown;
-      const { title, questions } = normalizeImportedQuestions(parsed);
+      const { title, questions, backgroundImage } =
+        normalizeImportedQuestions(parsed);
       if (title) setBuilderTitle(title);
       setBuilderBackgroundImage(
         typeof backgroundImage === "string" && backgroundImage.trim()
@@ -455,10 +527,11 @@ export default function HostPage() {
   // TIMER
   useEffect(() => {
     if (!currentQuestion || showResults) return;
-    const durationMs = QUESTION_DURATION_MS;
+    const durationSec = normalizeDurationSec(currentQuestion.durationSec);
+    const durationMs = durationSec * 1000;
     const start = performance.now();
     setTimerMs(durationMs);
-    setTimer(Math.ceil(durationMs / 1000));
+    setTimer(Math.ceil(durationSec));
 
     let rafId = 0;
     const tick = (now: number) => {
@@ -566,14 +639,15 @@ export default function HostPage() {
       return;
     }
 
+    const durationSec = normalizeDurationSec(question.durationSec);
     setCurrentQuestion(question);
-    setTimer(QUESTION_DURATION_SEC);
-    setTimerMs(QUESTION_DURATION_MS);
+    setTimer(durationSec);
+    setTimerMs(durationSec * 1000);
     setAnswers([]);
     setShowResults(false);
     endQuestionSentRef.current = false;
 
-    socket.emit("start_question", { pin, question, durationSec: 20 });
+    socket.emit("start_question", { pin, question, durationSec });
 
     setStage("question");
     setQuestionIndex((prev) => prev + 1);
@@ -593,7 +667,11 @@ export default function HostPage() {
       (quiz.questions || []).map((q: any) => ({
         text: q.text,
         options: q.options,
-        correctAnswer: Number(q.correctAnswer) || 0,
+        correctAnswers: normalizeCorrectAnswers(
+          typeof q.correctAnswers !== "undefined" ? q.correctAnswers : q.correctAnswer,
+          Array.isArray(q.options) ? q.options : ["", "", "", ""]
+        ),
+        durationSec: normalizeDurationSec(q.durationSec),
         media: q.media,
       }))
     );
@@ -611,7 +689,8 @@ export default function HostPage() {
       {
         text: "Untitled question",
         options: ["", "", "", ""],
-        correctAnswer: 0,
+        correctAnswers: [0],
+        durationSec: DEFAULT_QUESTION_DURATION_SEC,
       },
     ]);
     setBuilderIndex(0);
@@ -634,7 +713,12 @@ export default function HostPage() {
     setBuilderQuestions((prev) => {
       if (prev.length <= 1) {
         return [
-          { text: "Untitled question", options: ["", "", "", ""], correctAnswer: 0 },
+          {
+            text: "Untitled question",
+            options: ["", "", "", ""],
+            correctAnswers: [0],
+            durationSec: DEFAULT_QUESTION_DURATION_SEC,
+          },
         ];
       }
       return prev.filter((_, i) => i !== index);
@@ -691,7 +775,8 @@ export default function HostPage() {
     const sanitized = builderQuestions.map((q) => ({
       text: q.text,
       options: q.options,
-      correctAnswer: q.correctAnswer,
+      correctAnswers: q.correctAnswers,
+      durationSec: normalizeDurationSec(q.durationSec),
       media: q.media,
     }));
 
@@ -755,13 +840,41 @@ export default function HostPage() {
         onAddQuestion={() =>
           setBuilderQuestions((prev) => [
             ...prev,
-            { text: "New question", options: ["", "", "", ""], correctAnswer: 0 },
+            {
+              text: "New question",
+              options: ["", "", "", ""],
+              correctAnswers: [0],
+              durationSec: DEFAULT_QUESTION_DURATION_SEC,
+            },
           ])
         }
         onDeleteQuestion={deleteBuilderQuestion}
+        onReorderQuestion={(fromIndex, toIndex) => {
+          setBuilderQuestions((prev) => {
+            if (fromIndex < 0 || fromIndex >= prev.length) return prev;
+            if (toIndex < 0 || toIndex >= prev.length) return prev;
+            const next = [...prev];
+            const [moved] = next.splice(fromIndex, 1);
+            next.splice(toIndex, 0, moved);
+            return next;
+          });
+          setBuilderIndex((prevIndex) => {
+            if (prevIndex === fromIndex) return toIndex;
+            if (fromIndex < prevIndex && toIndex >= prevIndex) return prevIndex - 1;
+            if (fromIndex > prevIndex && toIndex <= prevIndex) return prevIndex + 1;
+            return prevIndex;
+          });
+        }}
         onUpdateQuestionText={(text) =>
           setBuilderQuestions((prev) =>
             prev.map((q, i) => (i === builderIndex ? { ...q, text } : q))
+          )
+        }
+        onUpdateDuration={(durationSec) =>
+          setBuilderQuestions((prev) =>
+            prev.map((q, i) =>
+              i === builderIndex ? { ...q, durationSec } : q
+            )
           )
         }
         onUpdateOption={(optionIndex, value) =>
@@ -776,9 +889,18 @@ export default function HostPage() {
             )
           )
         }
-        onSelectCorrect={(optionIndex) =>
+        onToggleCorrect={(optionIndex) =>
           setBuilderQuestions((prev) =>
-            prev.map((q, i) => (i === builderIndex ? { ...q, correctAnswer: optionIndex } : q))
+            prev.map((q, i) => {
+              if (i !== builderIndex) return q;
+              const current = q.correctAnswers ?? [];
+              const has = current.includes(optionIndex);
+              const next = has
+                ? current.filter((idx) => idx !== optionIndex)
+                : [...current, optionIndex];
+              const normalized = next.length > 0 ? next : [optionIndex];
+              return { ...q, correctAnswers: normalized.sort((a, b) => a - b) };
+            })
           )
         }
         onSetMedia={(media) =>
@@ -814,7 +936,7 @@ export default function HostPage() {
           questionSetLength={questionSet.length}
           timer={timer}
           timerMs={timerMs}
-          durationMs={QUESTION_DURATION_MS}
+          durationMs={normalizeDurationSec(currentQuestion.durationSec) * 1000}
           currentQuestion={currentQuestion}
           showResults={showResults}
           onQuitGame={finalizeGame}
@@ -923,7 +1045,7 @@ export default function HostPage() {
                 value={jsonPasteText}
                 onChange={(e) => setJsonPasteText(e.target.value)}
                 className="w-full h-64 rounded-xl border border-gray-200 p-4 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-purple-200"
-                placeholder='{"title":"My Quiz","questions":[{"text":"Question?","options":["A","B"],"correctAnswer":0}]}'
+                placeholder='{"title":"My Quiz","questions":[{"text":"Question?","options":["A","B"],"correctAnswers":[0],"durationSec":20}]}'
               />
               <div className="flex items-center justify-end gap-3">
                 <button

@@ -187,6 +187,7 @@ export function HostQuestionScreen({
                 },
               ] as const;
               const columnCount = Math.max(1, optionEntries.length);
+              const correctAnswers = currentQuestion.correctAnswers ?? [];
 
               return (
                 <>
@@ -205,8 +206,7 @@ export function HostQuestionScreen({
                             const heightPct = (count / maxCount) * 100;
                             const barHeight =
                               count === 0 ? 0 : Math.max(18, heightPct);
-                            const isCorrect =
-                              optionIndex === currentQuestion?.correctAnswer;
+                            const isCorrect = correctAnswers.includes(optionIndex);
 
                             return (
                               <div
@@ -249,8 +249,7 @@ export function HostQuestionScreen({
 
                   <div className="mt-6 grid flex-none grid-cols-2 gap-0 overflow-hidden rounded-xl shadow-2xl ring-1 ring-white/10">
                     {optionEntries.map(({ opt, index }) => {
-                      const isCorrect =
-                        index === currentQuestion?.correctAnswer;
+                      const isCorrect = correctAnswers.includes(index);
                       return (
                         <div
                           key={index}

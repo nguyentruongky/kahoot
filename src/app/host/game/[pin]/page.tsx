@@ -540,7 +540,10 @@ export default function HostGamePage() {
       return;
     }
 
-    const nextDurationSec = 20;
+    const nextDurationSec =
+      typeof question.durationSec === "number" && question.durationSec > 0
+        ? Math.min(300, Math.max(5, Math.trunc(question.durationSec)))
+        : 20;
     setCurrentQuestion(question);
     setDurationSec(nextDurationSec);
     setTimer(nextDurationSec);

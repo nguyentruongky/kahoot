@@ -31,8 +31,8 @@ export default function PlayerPage() {
   const [feedback, setFeedback] = useState<"correct" | "incorrect" | null>(
     null
   );
-  const [revealedCorrectAnswer, setRevealedCorrectAnswer] = useState<
-    number | null
+  const [revealedCorrectAnswers, setRevealedCorrectAnswers] = useState<
+    number[] | null
   >(null);
   const [resultPopup, setResultPopup] = useState<ResultPopupState | null>(null);
   const [finalPopup, setFinalPopup] = useState<FinalPopupState | null>(null);
@@ -153,7 +153,7 @@ export default function PlayerPage() {
       selectedAnswerRef.current = null;
       setAnswered(false);
       setFeedback(null);
-      setRevealedCorrectAnswer(null);
+      setRevealedCorrectAnswers(null);
       setResultPopup(null);
       setGameStatus("playing");
       playBeep(523, 120);
@@ -222,7 +222,8 @@ export default function PlayerPage() {
     socket.on("end_game", handleEndGame);
     const handleEndQuestion = (data: {
       questionId?: number;
-      correctAnswer: number;
+      correctAnswers?: number[];
+      correctAnswer?: number;
       results?: Record<
         string,
         {
@@ -244,9 +245,12 @@ export default function PlayerPage() {
       }
 
       setAnswered(true);
-      setRevealedCorrectAnswer(
-        Number.isFinite(data.correctAnswer) ? data.correctAnswer : null
-      );
+      const correctAnswers = Array.isArray(data.correctAnswers)
+        ? data.correctAnswers
+        : Number.isFinite(data.correctAnswer)
+          ? [Number(data.correctAnswer)]
+          : [];
+      setRevealedCorrectAnswers(correctAnswers.length > 0 ? correctAnswers : null);
       const selected = selectedAnswerRef.current;
 
       const myResult = data.results?.[nameRef.current];
@@ -258,7 +262,8 @@ export default function PlayerPage() {
       });
 
       const q = currentQuestionRef.current;
-      const isCorrect = selected !== null && selected === data.correctAnswer;
+      const isCorrect =
+        selected !== null && correctAnswers.includes(selected);
       const variant: "success" | "danger" | "neutral" =
         selected === null ? "neutral" : isCorrect ? "success" : "danger";
       const title =
@@ -313,7 +318,7 @@ export default function PlayerPage() {
     });
   };
 
-  const answersRevealed = revealedCorrectAnswer !== null;
+  const answersRevealed = revealedCorrectAnswers !== null;
 
   const getBaseAnswerColorClass = (
     index: number,
@@ -346,7 +351,7 @@ export default function PlayerPage() {
       return feedback === "correct" ? "bg-green-600" : "bg-red-600";
     }
 
-    if (index === revealedCorrectAnswer) {
+    if (revealedCorrectAnswers?.includes(index)) {
       return "bg-green-600";
     }
 

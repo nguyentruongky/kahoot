@@ -12,7 +12,8 @@ import { BACKGROUND_BASE_CLASS, backgroundStyle } from "@/lib/backgrounds";
 type EditableQuestion = {
   text: string;
   options: string[];
-  correctAnswer: number;
+  correctAnswers: number[];
+  durationSec: number;
   media?: { kind: "image" | "video"; src: string; mime?: string };
 };
 
@@ -29,9 +30,11 @@ type HostBuilderScreenProps = {
   onSelectQuestion: (index: number) => void;
   onAddQuestion: () => void;
   onDeleteQuestion: (index: number) => void;
+  onReorderQuestion: (fromIndex: number, toIndex: number) => void;
   onUpdateQuestionText: (text: string) => void;
+  onUpdateDuration: (durationSec: number) => void;
   onUpdateOption: (optionIndex: number, value: string) => void;
-  onSelectCorrect: (optionIndex: number) => void;
+  onToggleCorrect: (optionIndex: number) => void;
   onSetMedia: (media?: EditableQuestion["media"]) => void;
   onCancel: () => void;
   onOpenPasteJson: () => void;
@@ -53,9 +56,11 @@ export function HostBuilderScreen({
   onSelectQuestion,
   onAddQuestion,
   onDeleteQuestion,
+  onReorderQuestion,
   onUpdateQuestionText,
+  onUpdateDuration,
   onUpdateOption,
-  onSelectCorrect,
+  onToggleCorrect,
   onSetMedia,
   onCancel,
   onOpenPasteJson,
@@ -140,6 +145,23 @@ export function HostBuilderScreen({
             <button
               key={idx}
               onClick={() => onSelectQuestion(idx)}
+              draggable
+              onDragStart={(event) => {
+                event.dataTransfer.setData("text/plain", String(idx));
+                event.dataTransfer.effectAllowed = "move";
+              }}
+              onDragOver={(event) => {
+                event.preventDefault();
+                event.dataTransfer.dropEffect = "move";
+              }}
+              onDrop={(event) => {
+                event.preventDefault();
+                const raw = event.dataTransfer.getData("text/plain");
+                const fromIndex = Number(raw);
+                if (!Number.isFinite(fromIndex)) return;
+                if (fromIndex === idx) return;
+                onReorderQuestion(fromIndex, idx);
+              }}
               className={`w-full text-left p-3 rounded-xl border ${
                 builderIndex === idx
                   ? "border-purple-500 bg-purple-50 text-purple-700"
@@ -213,7 +235,7 @@ export function HostBuilderScreen({
             </div>
           </div>
 
-          <div className="bg-gray-100 rounded-2xl p-6">
+          <div className="bg-gray-100 rounded-2xl p-6 space-y-5">
             <input
               value={active?.text || ""}
               onChange={(e) => onUpdateQuestionText(e.target.value)}
@@ -221,7 +243,31 @@ export function HostBuilderScreen({
               placeholder="Type your question..."
             />
 
-            <div className="mt-6 rounded-2xl border-2 border-dashed border-gray-300 bg-white/60 p-5">
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex items-center gap-3 rounded-xl bg-white px-4 py-3 shadow-sm ring-1 ring-gray-200">
+                <div>
+                  <p className="text-xs font-semibold uppercase text-gray-500">
+                    Time limit
+                  </p>
+                  <p className="text-sm text-gray-500">Seconds per question</p>
+                </div>
+                <input
+                  type="number"
+                  min={5}
+                  max={300}
+                  step={5}
+                  value={active?.durationSec ?? 20}
+                  onChange={(e) =>
+                    onUpdateDuration(
+                      Math.max(5, Math.min(300, Number(e.target.value) || 20))
+                    )
+                  }
+                  className="w-24 rounded-lg border border-gray-200 px-3 py-2 text-right text-base font-semibold"
+                />
+              </div>
+            </div>
+
+            <div className="rounded-2xl border-2 border-dashed border-gray-300 bg-white/60 p-5">
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-2">
                   {active?.media && (
@@ -281,7 +327,7 @@ export function HostBuilderScreen({
                 "bg-yellow-500",
                 "bg-green-500",
               ];
-              const isCorrect = active?.correctAnswer === index;
+              const isCorrect = active?.correctAnswers?.includes(index) ?? false;
 
               return (
                 <div
@@ -302,7 +348,7 @@ export function HostBuilderScreen({
                     />
 
                     <button
-                      onClick={() => onSelectCorrect(index)}
+                      onClick={() => onToggleCorrect(index)}
                       className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${
                         isCorrect
                           ? "bg-white text-green-600 border-white"

@@ -3,7 +3,9 @@ import mongoose from "mongoose";
 const QuestionSchema = new mongoose.Schema({
   text: { type: String, required: true },
   options: { type: [String], required: true },
-  correctAnswer: { type: Number, required: true }, // 0-based index into `options`
+  correctAnswer: { type: Number, required: false }, // 0-based index into `options` (legacy)
+  correctAnswers: { type: [Number], required: true },
+  durationSec: { type: Number, required: true, default: 20 },
   media: {
     kind: { type: String, enum: ["image", "video"], required: false },
     src: { type: String, required: false },

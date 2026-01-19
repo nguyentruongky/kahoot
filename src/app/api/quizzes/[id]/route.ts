@@ -1,6 +1,7 @@
 import { connectDB } from "@/lib/db";
 import { getAuthUser } from "@/lib/authServer";
 import Quiz from "@/models/Quiz";
+import { normalizeCorrectAnswers } from "@/lib/quizDefaults";
 import { NextResponse } from "next/server";
 
 type IncomingQuestion = {
@@ -9,8 +10,11 @@ type IncomingQuestion = {
   options?: unknown;
   choices?: unknown;
   correctAnswer?: unknown;
+  correctAnswers?: unknown;
   answerIndex?: unknown;
   answer?: unknown;
+  durationSec?: unknown;
+  duration?: unknown;
   media?: unknown;
 };
 
@@ -36,32 +40,18 @@ const normalizeMedia = (raw: unknown): MediaPayload | undefined => {
   return { kind, src, mime };
 };
 
-const normalizeCorrectAnswer = (
-  candidate: unknown,
-  options: string[]
-): number => {
-  if (typeof candidate === "number" && Number.isFinite(candidate)) {
-    const idx = Math.trunc(candidate);
-    if (idx >= 0 && idx < options.length) return idx;
-    if (idx - 1 >= 0 && idx - 1 < options.length) return idx - 1;
-    return 0;
-  }
-
-  if (typeof candidate === "string") {
-    const trimmed = candidate.trim();
-    if (trimmed !== "") {
-      const asNum = Number(trimmed);
-      if (Number.isFinite(asNum)) {
-        const idx = Math.trunc(asNum);
-        if (idx >= 0 && idx < options.length) return idx;
-        if (idx - 1 >= 0 && idx - 1 < options.length) return idx - 1;
-      }
-      const byText = options.findIndex((o) => o === trimmed);
-      if (byText >= 0) return byText;
-    }
-  }
-
-  return 0;
+const normalizeDurationSec = (candidate: unknown): number => {
+  const raw =
+    typeof candidate === "number"
+      ? candidate
+      : typeof candidate === "string" && candidate.trim() !== ""
+        ? Number(candidate)
+        : NaN;
+  if (!Number.isFinite(raw)) return 20;
+  const value = Math.trunc(raw);
+  if (value < 5) return 5;
+  if (value > 300) return 300;
+  return value;
 };
 
 const normalizeQuizBody = (raw: unknown) => {
@@ -91,7 +81,8 @@ const normalizeQuizBody = (raw: unknown) => {
         | {
             text: string;
             options: string[];
-            correctAnswer: number;
+            correctAnswers: number[];
+            durationSec: number;
             media?: MediaPayload;
           }
         | null => {
@@ -115,16 +106,21 @@ const normalizeQuizBody = (raw: unknown) => {
       while (options.length < 4) options.push("");
 
       const candidate =
-        typeof item.correctAnswer !== "undefined"
-          ? item.correctAnswer
-          : typeof item.answerIndex !== "undefined"
-            ? item.answerIndex
-            : item.answer;
+        typeof item.correctAnswers !== "undefined"
+          ? item.correctAnswers
+          : typeof item.correctAnswer !== "undefined"
+            ? item.correctAnswer
+            : typeof item.answerIndex !== "undefined"
+              ? item.answerIndex
+              : item.answer;
 
-      const correctAnswer = normalizeCorrectAnswer(candidate, options);
+      const correctAnswers = normalizeCorrectAnswers(candidate, options);
+      const durationSec = normalizeDurationSec(
+        typeof item.durationSec !== "undefined" ? item.durationSec : item.duration
+      );
       const media = normalizeMedia(item.media);
 
-      return { text, options, correctAnswer, media };
+      return { text, options, correctAnswers, durationSec, media };
     })
     .filter(
       (
@@ -132,7 +128,8 @@ const normalizeQuizBody = (raw: unknown) => {
       ): q is {
         text: string;
         options: string[];
-        correctAnswer: number;
+        correctAnswers: number[];
+        durationSec: number;
         media?: MediaPayload;
       } => Boolean(q)
     );
@@ -157,7 +154,11 @@ const toClientQuiz = (quiz: any) => {
       ...q,
       text: String(q.text ?? ""),
       options,
-      correctAnswer: normalizeCorrectAnswer(q.correctAnswer, options),
+      correctAnswers: normalizeCorrectAnswers(
+        typeof q.correctAnswers !== "undefined" ? q.correctAnswers : q.correctAnswer,
+        options
+      ),
+      durationSec: normalizeDurationSec(q.durationSec),
       media: normalizeMedia(q.media),
     };
   };

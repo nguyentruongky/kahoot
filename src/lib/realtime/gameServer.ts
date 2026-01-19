@@ -4,7 +4,8 @@ type PlayerInfo = { name: string; score: number };
 type QuestionPayload = {
   text: string;
   options: string[];
-  correctAnswer: number | string;
+  correctAnswer?: number | string;
+  correctAnswers?: number[];
 };
 
 const instanceId = `${process.pid}-${Math.random().toString(16).slice(2)}`;
@@ -51,8 +52,12 @@ const awardPoints = (
   const q = room.question;
   if (!q) return { correct: false, points: 0, timeLeftSec: 0 };
 
-  const correctAnswer = Number(q.payload.correctAnswer);
-  const correct = answer === correctAnswer;
+  const correctAnswers = Array.isArray(q.payload.correctAnswers)
+    ? q.payload.correctAnswers.map((value) => Number(value))
+    : Number.isFinite(Number(q.payload.correctAnswer))
+      ? [Number(q.payload.correctAnswer)]
+      : [];
+  const correct = correctAnswers.includes(answer);
 
   const elapsedSec = (Date.now() - q.startedAt) / 1000;
   const timeLeftSec = q.ended ? 0 : Math.max(0, q.durationSec - elapsedSec);
@@ -124,9 +129,15 @@ function wireConnection(io: IOServer, socket: Socket) {
       return acc;
     }, {});
 
+    const correctAnswers = Array.isArray(room.question.payload.correctAnswers)
+      ? room.question.payload.correctAnswers.map((value) => Number(value))
+      : Number.isFinite(Number(room.question.payload.correctAnswer))
+        ? [Number(room.question.payload.correctAnswer)]
+        : [];
+
     io.to(pin).emit("end_question", {
       questionId: room.question.startedAt,
-      correctAnswer: Number(room.question.payload.correctAnswer),
+      correctAnswers,
       results,
     });
   };

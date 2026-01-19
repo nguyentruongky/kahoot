@@ -1,7 +1,9 @@
 export type Question = {
   text: string;
   options: string[];
-  correctAnswer: number | string;
+  correctAnswers?: number[];
+  correctAnswer?: number | string;
+  durationSec?: number;
   media?: { kind: "image" | "video"; src: string; mime?: string };
 };
 

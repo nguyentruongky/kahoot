@@ -1,10 +1,15 @@
 import { connectDB } from "@/lib/db";
+import { getAuthUser } from "@/lib/authServer";
 import Game from "@/models/Game";
 import Quiz from "@/models/Quiz";
 import { generatePin } from "@/lib/utils";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
+  const user = await getAuthUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   await connectDB();
   const body: { quizId?: string } = await req.json(); // expects { quizId: "..." }
 
@@ -22,6 +27,7 @@ export async function POST(req: Request) {
     pin: generatePin(),
     backgroundImage:
       typeof quiz.backgroundImage === "string" ? quiz.backgroundImage : undefined,
+    ownerId: user.id,
   });
 
   return NextResponse.json(

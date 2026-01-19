@@ -1,4 +1,8 @@
 import type { Server as IOServer, Socket } from "socket.io";
+import { connectDB } from "@/lib/db";
+import Game from "@/models/Game";
+import GameHistory from "@/models/GameHistory";
+import Quiz from "@/models/Quiz";
 
 type PlayerInfo = { name: string; score: number };
 type QuestionPayload = {
@@ -17,6 +21,25 @@ const instanceMeta = {
 
 type RoomState = {
   players: PlayerInfo[];
+  startedAt?: number;
+  history: {
+    questionId: number;
+    text: string;
+    options: string[];
+    correctAnswers: number[];
+    startedAt: number;
+    durationSec: number;
+    results: Record<
+      string,
+      {
+        answer: number | number[] | null;
+        correct: boolean;
+        points: number;
+        timeLeftSec: number;
+      }
+    >;
+  }[];
+  historySaved?: boolean;
   question?: {
     payload: QuestionPayload;
     startedAt: number; // epoch ms (server)
@@ -39,7 +62,7 @@ type RoomState = {
 const rooms: Record<string, RoomState> = {};
 
 const getRoom = (pin: string) => {
-  if (!rooms[pin]) rooms[pin] = { players: [] };
+  if (!rooms[pin]) rooms[pin] = { players: [], history: [] };
   return rooms[pin];
 };
 
@@ -169,6 +192,21 @@ function wireConnection(io: IOServer, socket: Socket) {
       correctAnswers,
       results,
     });
+
+    const existing = room.history.find(
+      (entry) => entry.questionId === room.question?.startedAt,
+    );
+    if (!existing && room.question) {
+      room.history.push({
+        questionId: room.question.startedAt,
+        text: room.question.payload.text,
+        options: room.question.payload.options,
+        correctAnswers,
+        startedAt: room.question.startedAt,
+        durationSec: room.question.durationSec,
+        results,
+      });
+    }
   };
 
   socket.on("host_create_room", ({ pin }: { pin: string }) => {
@@ -197,6 +235,7 @@ function wireConnection(io: IOServer, socket: Socket) {
       durationSec?: number;
     }) => {
       const room = getRoom(pin);
+      if (!room.startedAt) room.startedAt = Date.now();
       if (room.question?.endTimeout) clearTimeout(room.question.endTimeout);
       room.question = {
         payload: question,
@@ -282,6 +321,55 @@ function wireConnection(io: IOServer, socket: Socket) {
       leaderboardAll: leaderboard,
       byName,
     });
+
+    if (!room.historySaved) {
+      room.historySaved = true;
+      void (async () => {
+        try {
+          await connectDB();
+          const game = await Game.findOne({ pin });
+          if (!game) return;
+          const historyQuestions = room.history.map((entry) => ({
+            questionId: entry.questionId,
+            text: entry.text,
+            options: entry.options,
+            correctAnswers: entry.correctAnswers,
+            startedAt: new Date(entry.startedAt),
+            durationSec: entry.durationSec,
+            results: Object.entries(entry.results).map(([name, payload]) => ({
+              name,
+              answer: payload.answer,
+              correct: payload.correct,
+              points: payload.points,
+              timeLeftSec: payload.timeLeftSec,
+            })),
+          }));
+          const ownerId =
+            game.ownerId ??
+            (await Quiz.findById(game.quizId).select({ ownerId: 1 }).lean())
+              ?.ownerId ??
+            undefined;
+          await GameHistory.create({
+            pin,
+            quizId: game.quizId,
+            ownerId,
+            startedAt: room.startedAt ? new Date(room.startedAt) : new Date(),
+            endedAt: new Date(),
+            totalPlayers: room.players.length,
+            players: leaderboard,
+            questions: historyQuestions,
+            leaderboard,
+            leaderboardAll: leaderboard,
+          });
+          await Game.findOneAndUpdate(
+            { pin },
+            { status: "finished", players: room.players },
+          );
+        } catch (error) {
+          console.error("Failed to persist game history:", error);
+        }
+      })();
+    }
   });
 
   socket.on("disconnect", () => {

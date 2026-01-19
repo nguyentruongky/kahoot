@@ -11,6 +11,7 @@ const GameSchema = new mongoose.Schema({
   players: [PlayerSchema],
   status: { type: String, default: "waiting" }, // waiting | active | finished
   backgroundImage: { type: String, required: false },
+  ownerId: { type: mongoose.Schema.Types.ObjectId, ref: "User", index: true },
 });
 
 export default mongoose.models.Game || mongoose.model("Game", GameSchema);

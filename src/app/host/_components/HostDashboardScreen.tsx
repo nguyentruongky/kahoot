@@ -2,6 +2,7 @@
 
 import { useHostAuthUser } from "@/app/host/_components/HostAuthProvider";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useState } from "react";
 import { BACKGROUND_BASE_CLASS, backgroundStyle } from "@/lib/backgrounds";
 
@@ -107,6 +108,12 @@ export function HostDashboardScreen({
         >
           + Create New Quiz
         </button>
+        <Link
+          href="/host/history"
+          className="mt-3 block w-full rounded-xl border border-white/10 bg-white/5 py-3 text-center font-semibold text-white/80 transition hover:border-white/30 hover:text-white"
+        >
+          View Game History
+        </Link>
       </aside>
 
       <main className="col-span-9 space-y-6">

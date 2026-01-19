@@ -5,7 +5,7 @@ export default function HomePage() {
     <div className="min-h-screen bg-linear-to-br from-indigo-500 via-purple-500 to-pink-500 flex flex-col items-center justify-center px-6">
       {/* Header */}
       <h1 className="text-5xl md:text-6xl font-extrabold text-white drop-shadow-lg mb-6 text-center">
-        Quiz Master 🎯
+        Quizza 🎯
       </h1>
 
       {/* Subtitle */}

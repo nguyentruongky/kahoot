@@ -31,6 +31,7 @@ export default function HostGamePage() {
         : "";
 
   const [activeQuizTitle, setActiveQuizTitle] = useState("");
+  const [activeQuizId, setActiveQuizId] = useState("");
   const [players, setPlayers] = useState<Player[]>([]);
   const [questionSet, setQuestionSet] = useState<QuizQuestion[]>([]);
   const [questionIndex, setQuestionIndex] = useState(0);
@@ -56,6 +57,7 @@ export default function HostGamePage() {
   const [joinLinkCopyState, setJoinLinkCopyState] = useState<"idle" | "copied">(
     "idle",
   );
+  const [gameStartedAt, setGameStartedAt] = useState<number | null>(null);
   const lobbyTrackRef = useRef<string | null>(null);
   const playingTrackRef = useRef<string | null>(null);
   const musicRef = useRef<HTMLAudioElement | null>(null);
@@ -65,9 +67,22 @@ export default function HostGamePage() {
   const lastTimeUpQuestionIdRef = useRef<number | null>(null);
   const finalWinPlayedRef = useRef(false);
   const timedOutRef = useRef(false);
+  const currentQuestionRef = useRef<QuizQuestion | null>(null);
+  const durationSecRef = useRef(durationSec);
   const joinLinkCopyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
+  const questionHistoryRef = useRef<
+    {
+      questionId: number;
+      text: string;
+      options: string[];
+      correctAnswers: number[];
+      startedAt: number;
+      durationSec: number;
+      results: PlayerAnswerPayload[];
+    }[]
+  >([]);
 
   const showResults =
     !!currentQuestion &&
@@ -76,6 +91,14 @@ export default function HostGamePage() {
       (expectedAnswerCount > 0 && answers.length >= expectedAnswerCount));
   const effectiveTimer = showResults ? 0 : timer;
   const effectiveTimerMs = showResults ? 0 : timerMs;
+
+  useEffect(() => {
+    currentQuestionRef.current = currentQuestion;
+  }, [currentQuestion]);
+
+  useEffect(() => {
+    durationSecRef.current = durationSec;
+  }, [durationSec]);
 
   const playBeep = (frequency = 880, durationMs = 120) => {
     try {
@@ -157,6 +180,7 @@ export default function HostGamePage() {
 
         const gameData: { quizId: string } = await gameRes.json();
         const quizId = gameData.quizId;
+        setActiveQuizId(String(quizId ?? ""));
 
         const quizRes = await fetch(`/api/quizzes/${quizId}`);
         if (!quizRes.ok) {
@@ -251,8 +275,9 @@ export default function HostGamePage() {
       setPostQuestionScreen("results");
       endQuestionSentRef.current = true;
 
+      let mapped: PlayerAnswerPayload[] = [];
       if (data?.results) {
-        const mapped: PlayerAnswerPayload[] = Object.entries(data.results).map(
+        mapped = Object.entries(data.results).map(
           ([name, payload]) => ({
             name,
             answer: payload.answer,
@@ -262,6 +287,28 @@ export default function HostGamePage() {
           }),
         );
         setAnswers(mapped);
+      }
+
+      const resolvedQuestionId =
+        typeof data?.questionId === "number"
+          ? data.questionId
+          : typeof currentQuestionRef.current?.id === "number"
+            ? currentQuestionRef.current.id
+            : Date.now();
+      const existing = questionHistoryRef.current.find(
+        (entry) => entry.questionId === resolvedQuestionId,
+      );
+      if (!existing) {
+        questionHistoryRef.current.push({
+          questionId: resolvedQuestionId,
+          text: currentQuestionRef.current?.text ?? "",
+          options: currentQuestionRef.current?.options ?? [],
+          correctAnswers: data?.correctAnswers ?? [],
+          startedAt:
+            typeof data?.questionId === "number" ? data.questionId : Date.now(),
+          durationSec: durationSecRef.current,
+          results: mapped,
+        });
       }
     };
     socket.on("end_question", handleEndQuestion);
@@ -518,8 +565,59 @@ export default function HostGamePage() {
     };
   }, []);
 
+  const computeLeaderboard = (playersList: Player[]) => {
+    const sorted = playersList
+      .slice()
+      .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
+    let lastScore: number | null = null;
+    let lastRank = 0;
+    return sorted.map((player, index) => {
+      if (lastScore === null || player.score !== lastScore) {
+        lastRank = index + 1;
+        lastScore = player.score;
+      }
+      return { name: player.name, score: player.score, rank: lastRank };
+    });
+  };
+
+  const persistGameHistory = async () => {
+    if (!pin || !activeQuizId) return;
+    const leaderboardAll = computeLeaderboard(players);
+    const questions = questionHistoryRef.current.map((entry) => ({
+      questionId: entry.questionId,
+      text: entry.text,
+      options: entry.options,
+      correctAnswers: entry.correctAnswers,
+      startedAt: new Date(entry.startedAt).toISOString(),
+      durationSec: entry.durationSec,
+      results: entry.results,
+    }));
+    try {
+      await fetch("/api/game-history", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          pin,
+          quizId: activeQuizId,
+          startedAt: gameStartedAt
+            ? new Date(gameStartedAt).toISOString()
+            : undefined,
+          endedAt: new Date().toISOString(),
+          totalPlayers: players.length,
+          players: leaderboardAll,
+          leaderboard: leaderboardAll.slice(0, 10),
+          leaderboardAll,
+          questions,
+        }),
+      });
+    } catch (error) {
+      console.error("Failed to persist game history:", error);
+    }
+  };
+
   const finalizeGame = () => {
     socket.emit("end_game", { pin });
+    void persistGameHistory();
     setStage("final");
     setCurrentQuestion(null);
     setTimer(0);
@@ -581,6 +679,9 @@ export default function HostGamePage() {
     setPostQuestionScreen("results");
     setExpectedAnswerCount(players.length);
     setQuestionEnded(false);
+    if (!gameStartedAt) {
+      setGameStartedAt(Date.now());
+    }
 
     socket.emit("start_question", {
       pin,
@@ -703,7 +804,7 @@ export default function HostGamePage() {
     <>
       {screens[stage] ?? fallbackScreen}
       {showEndGameConfirm ? (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-6 backdrop-blur-sm">
+        <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 p-6 backdrop-blur-sm">
           <div className="w-full max-w-lg rounded-3xl border border-white/10 bg-linear-to-br from-[#11142a] via-[#0f1224] to-[#141a33] p-6 text-white shadow-[0_30px_80px_rgba(0,0,0,0.45)]">
             <div className="flex items-center justify-between">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-2xl">

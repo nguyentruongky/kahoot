@@ -343,11 +343,11 @@ export default function HostPage() {
       const tags = Array.isArray(q.tags)
         ? q.tags.map((tag: string) => String(tag ?? ""))
         : [];
-      const tagsLower = tags.map((tag) => tag.toLowerCase());
+      const tagsLower = tags.map((tag: string) => tag.toLowerCase());
       const matchesTerm =
         !normalizedTerm ||
         title.includes(normalizedTerm) ||
-        tagsLower.some((tag) => tag.includes(normalizedTerm));
+        tagsLower.some((tag: string) => tag.includes(normalizedTerm));
       const matchesTags =
         normalizedSelected.length === 0 ||
         normalizedSelected.every((tag) => tagsLower.includes(tag));

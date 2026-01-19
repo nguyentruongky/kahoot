@@ -265,8 +265,9 @@ export function BuilderClient({ quizId }: BuilderClientProps) {
         ? line.split(":").slice(1).join(":")
         : line;
       const letters = afterColon.match(/[a-d]/gi) ?? [];
-      if (letters.length > 0) {
-        const letter = letters[0].toLowerCase();
+      const firstLetter = letters[0];
+      if (firstLetter) {
+        const letter = firstLetter.toLowerCase();
         return letter.charCodeAt(0) - "a".charCodeAt(0);
       }
       const numbers = afterColon.match(/\d+/g) ?? [];

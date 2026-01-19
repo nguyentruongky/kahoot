@@ -361,6 +361,26 @@ export default function HostGamePage() {
 
   useEffect(() => {
     if (!currentQuestion) return;
+    if (stage !== "question") return;
+    if (!showResults) return;
+    const questionId =
+      typeof currentQuestion?.id === "number"
+        ? currentQuestion.id
+        : questionIndex;
+    if (lastTimeUpQuestionIdRef.current === questionId) return;
+    lastTimeUpQuestionIdRef.current = questionId;
+    if (!timeUpRef.current) {
+      timeUpRef.current = new Audio("/music/time-up.mp3");
+      timeUpRef.current.volume = 0.6;
+    }
+    timeUpRef.current.currentTime = 0;
+    timeUpRef.current.play().catch(() => {
+      // Autoplay might be blocked until user interaction.
+    });
+  }, [showResults, stage, currentQuestion, questionIndex]);
+
+  useEffect(() => {
+    if (!currentQuestion) return;
     if (timer <= 5 && timer > 0 && !showResults) {
       playBeep(660, 90);
     }

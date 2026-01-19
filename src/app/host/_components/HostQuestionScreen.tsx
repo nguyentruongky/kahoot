@@ -16,7 +16,7 @@ type Question = {
 type HostQuestionScreenProps = {
   pin: string;
   players: Player[];
-  answers: Array<{ answer: number }>;
+  answers: Array<{ answer: number | number[] | null }>;
   questionIndex: number;
   questionSetLength: number;
   timer: number;
@@ -119,7 +119,12 @@ export function HostQuestionScreen({
       ) : (
         <div className="space-y-4">
           {optionEntries.map(({ opt, index }) => {
-            const count = answers.filter((a) => a.answer === index).length;
+            const count = answers.filter((a) => {
+              if (Array.isArray(a.answer)) {
+                return a.answer.includes(index);
+              }
+              return a.answer === index;
+            }).length;
             const percentage = answers.length ? (count / answers.length) * 100 : 0;
             const isCorrect = correctAnswers.includes(index);
 

@@ -21,7 +21,7 @@ export default function PlayerPage() {
   const [pin, setPin] = useState("");
   const [name, setName] = useState("");
   const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  const [selectedAnswers, setSelectedAnswers] = useState<number[]>([]);
   const [answered, setAnswered] = useState(false);
   const [score, setScore] = useState(0);
   const [answerStreak, setAnswerStreak] = useState(0);
@@ -40,7 +40,7 @@ export default function PlayerPage() {
     string | undefined
   >(undefined);
   const questionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const selectedAnswerRef = useRef<number | null>(null);
+  const selectedAnswersRef = useRef<number[]>([]);
   const pinRef = useRef<string>("");
   const nameRef = useRef<string>("");
   const currentQuestionRef = useRef<Question | null>(null);
@@ -149,8 +149,8 @@ export default function PlayerPage() {
       console.log("📝 New question received:", data);
       setCurrentQuestion(data.question);
       currentQuestionRef.current = data.question;
-      setSelectedAnswer(null);
-      selectedAnswerRef.current = null;
+      setSelectedAnswers([]);
+      selectedAnswersRef.current = [];
       setAnswered(false);
       setFeedback(null);
       setRevealedCorrectAnswers(null);
@@ -227,7 +227,7 @@ export default function PlayerPage() {
       results?: Record<
         string,
         {
-          answer: number | null;
+          answer: number | number[] | null;
           correct: boolean;
           points: number;
           timeLeftSec: number;
@@ -251,7 +251,7 @@ export default function PlayerPage() {
           ? [Number(data.correctAnswer)]
           : [];
       setRevealedCorrectAnswers(correctAnswers.length > 0 ? correctAnswers : null);
-      const selected = selectedAnswerRef.current;
+      const selected = selectedAnswersRef.current;
 
       const myResult = data.results?.[nameRef.current];
       const points = typeof myResult?.points === "number" ? myResult.points : 0;
@@ -262,20 +262,26 @@ export default function PlayerPage() {
       });
 
       const q = currentQuestionRef.current;
+      const computedCorrect =
+        selected.length > 0 &&
+        selected.length === correctAnswers.length &&
+        selected.every((value) => correctAnswers.includes(value));
       const isCorrect =
-        selected !== null && correctAnswers.includes(selected);
+        typeof myResult?.correct === "boolean"
+          ? myResult.correct
+          : computedCorrect;
       const variant: "success" | "danger" | "neutral" =
-        selected === null ? "neutral" : isCorrect ? "success" : "danger";
+        selected.length === 0 ? "neutral" : isCorrect ? "success" : "danger";
       const title =
-        selected === null ? "Time's up!" : isCorrect ? "Correct" : "Wrong";
+        selected.length === 0 ? "Time's up!" : isCorrect ? "Correct" : "Wrong";
 
       const nextStreak =
-        selected === null ? 0 : isCorrect ? answerStreakRef.current + 1 : 0;
+        selected.length === 0 ? 0 : isCorrect ? answerStreakRef.current + 1 : 0;
       answerStreakRef.current = nextStreak;
       setAnswerStreak(nextStreak);
 
       setFeedback(
-        selected === null ? null : isCorrect ? "correct" : "incorrect"
+        selected.length === 0 ? null : isCorrect ? "correct" : "incorrect"
       );
       setResultPopup({
         open: true,
@@ -303,18 +309,43 @@ export default function PlayerPage() {
     };
   }, [router]);
 
-  const handleAnswerSelect = (index: number) => {
+  const isMultiSelect = (question?: Question | null) =>
+    (question?.correctAnswers?.length ?? 0) > 1;
+
+  const handleAnswerToggle = (index: number) => {
     if (answered) return;
+    if (!isMultiSelect(currentQuestion)) {
+      const selected = [index];
+      setSelectedAnswers(selected);
+      selectedAnswersRef.current = selected;
+      setAnswered(true);
 
-    setSelectedAnswer(index);
-    selectedAnswerRef.current = index;
+      socket.emit("player_answer", {
+        pin: pinRef.current || pin,
+        name: nameRef.current || name,
+        answer: index,
+      });
+      return;
+    }
+
+    setSelectedAnswers((prev) => {
+      const has = prev.includes(index);
+      const next = has ? prev.filter((v) => v !== index) : [...prev, index];
+      selectedAnswersRef.current = next;
+      return next;
+    });
+  };
+
+  const submitMultiAnswer = () => {
+    if (answered) return;
+    if (!isMultiSelect(currentQuestion)) return;
+    const selection = selectedAnswersRef.current;
+    if (selection.length === 0) return;
     setAnswered(true);
-
-    // Emit answer to server
     socket.emit("player_answer", {
       pin: pinRef.current || pin,
       name: nameRef.current || name,
-      answer: index,
+      answer: selection,
     });
   };
 
@@ -346,7 +377,7 @@ export default function PlayerPage() {
     }
 
     // After answering, show correct/incorrect
-    if (index === selectedAnswer) {
+    if (selectedAnswers.includes(index)) {
       if (!feedback) return "bg-purple-600";
       return feedback === "correct" ? "bg-green-600" : "bg-red-600";
     }
@@ -365,9 +396,11 @@ export default function PlayerPage() {
         question={currentQuestion}
         answered={answered}
         answersRevealed={answersRevealed}
-        selectedAnswer={selectedAnswer}
+        selectedAnswers={selectedAnswers}
+        allowMultiSelect={isMultiSelect(currentQuestion)}
         getAnswerClassName={getAnswerColorClass}
-        onSelectAnswer={handleAnswerSelect}
+        onToggleAnswer={handleAnswerToggle}
+        onSubmitAnswers={submitMultiAnswer}
       />
     ) : null,
     ended: (

@@ -153,7 +153,12 @@ export function HostQuestionScreen({
                 .filter((entry) => entry.opt.trim() !== "");
               const counts = optionEntries.map(
                 (entry) =>
-                  answers.filter((a) => a.answer === entry.index).length,
+                  answers.filter((a) => {
+                    if (Array.isArray(a.answer)) {
+                      return a.answer.includes(entry.index);
+                    }
+                    return a.answer === entry.index;
+                  }).length,
               );
               const maxCount = Math.max(1, ...counts);
               const meta = [

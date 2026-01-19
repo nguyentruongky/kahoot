@@ -13,7 +13,7 @@ export type QuizQuestion = {
 
 export type PlayerAnswerPayload = {
   name: string;
-  answer: number;
+  answer: number | number[] | null;
   correct: boolean;
   points: number;
   timeLeftSec: number;
@@ -24,6 +24,11 @@ export type EndQuestionPayload = {
   correctAnswers?: number[];
   results?: Record<
     string,
-    { answer: number; correct: boolean; points: number; timeLeftSec: number }
+    {
+      answer: number | number[] | null;
+      correct: boolean;
+      points: number;
+      timeLeftSec: number;
+    }
   >;
 };

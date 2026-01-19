@@ -480,7 +480,7 @@ export default function HostPage() {
 
     const handlePlayerAnswer = (data: {
       name: string;
-      answer: number;
+      answer: number | number[];
       correct: boolean;
       points?: number;
       timeLeftSec?: number;

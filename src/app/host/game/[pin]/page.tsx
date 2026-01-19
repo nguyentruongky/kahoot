@@ -544,6 +544,27 @@ export default function HostGamePage() {
       typeof question.durationSec === "number" && question.durationSec > 0
         ? Math.min(300, Math.max(5, Math.trunc(question.durationSec)))
         : 20;
+    const normalizedCorrectAnswers = Array.isArray(question.correctAnswers)
+      ? question.correctAnswers
+          .map((value) => Number(value))
+          .filter((value) => Number.isFinite(value))
+      : [];
+    const legacyCorrect =
+      typeof (question as { correctAnswer?: unknown }).correctAnswer !==
+      "undefined"
+        ? Number((question as { correctAnswer?: unknown }).correctAnswer)
+        : NaN;
+    const resolvedCorrectAnswers =
+      normalizedCorrectAnswers.length > 0
+        ? normalizedCorrectAnswers
+        : Number.isFinite(legacyCorrect)
+          ? [legacyCorrect]
+          : [0];
+    const questionPayload = {
+      ...question,
+      correctAnswers: resolvedCorrectAnswers,
+      correctAnswer: resolvedCorrectAnswers[0],
+    };
     setCurrentQuestion(question);
     setDurationSec(nextDurationSec);
     setTimer(nextDurationSec);
@@ -556,7 +577,7 @@ export default function HostGamePage() {
 
     socket.emit("start_question", {
       pin,
-      question,
+      question: questionPayload,
       durationSec: nextDurationSec,
     });
 

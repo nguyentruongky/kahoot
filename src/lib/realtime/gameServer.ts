@@ -24,7 +24,12 @@ type RoomState = {
     answered: Set<string>;
     perPlayer: Record<
       string,
-      { answer: number; correct: boolean; points: number; timeLeftSec: number }
+      {
+        answer: number | number[];
+        correct: boolean;
+        points: number;
+        timeLeftSec: number;
+      }
     >;
     ended?: boolean;
     endTimeout?: ReturnType<typeof setTimeout>;
@@ -47,17 +52,33 @@ const upsertPlayer = (pin: string, name: string) => {
 const awardPoints = (
   room: RoomState,
   name: string,
-  answer: number
+  answer: number | number[],
 ): { correct: boolean; points: number; timeLeftSec: number } => {
   const q = room.question;
   if (!q) return { correct: false, points: 0, timeLeftSec: 0 };
 
-  const correctAnswers = Array.isArray(q.payload.correctAnswers)
-    ? q.payload.correctAnswers.map((value) => Number(value))
-    : Number.isFinite(Number(q.payload.correctAnswer))
-      ? [Number(q.payload.correctAnswer)]
-      : [];
-  const correct = correctAnswers.includes(answer);
+  const normalizedCorrect = Array.isArray(q.payload.correctAnswers)
+    ? q.payload.correctAnswers
+        .map((value) => Number(value))
+        .filter((value) => Number.isFinite(value))
+    : [];
+  const correctAnswers =
+    normalizedCorrect.length > 0
+      ? normalizedCorrect
+      : Number.isFinite(Number(q.payload.correctAnswer))
+        ? [Number(q.payload.correctAnswer)]
+        : [];
+  const selected = Array.isArray(answer)
+    ? answer.map((v) => Number(v))
+    : [answer];
+  const uniqueSelected = Array.from(new Set(selected)).sort((a, b) => a - b);
+  const normalizedAnswers = Array.from(new Set(correctAnswers)).sort(
+    (a, b) => a - b,
+  );
+  const correct =
+    uniqueSelected.length > 0 &&
+    uniqueSelected.length === normalizedAnswers.length &&
+    uniqueSelected.every((value, index) => value === normalizedAnswers[index]);
 
   const elapsedSec = (Date.now() - q.startedAt) / 1000;
   const timeLeftSec = q.ended ? 0 : Math.max(0, q.durationSec - elapsedSec);
@@ -113,7 +134,7 @@ function wireConnection(io: IOServer, socket: Socket) {
       Record<
         string,
         {
-          answer: number | null;
+          answer: number | number[] | null;
           correct: boolean;
           points: number;
           timeLeftSec: number;
@@ -129,11 +150,19 @@ function wireConnection(io: IOServer, socket: Socket) {
       return acc;
     }, {});
 
-    const correctAnswers = Array.isArray(room.question.payload.correctAnswers)
-      ? room.question.payload.correctAnswers.map((value) => Number(value))
-      : Number.isFinite(Number(room.question.payload.correctAnswer))
-        ? [Number(room.question.payload.correctAnswer)]
-        : [];
+    const normalizedCorrect = Array.isArray(
+      room.question.payload.correctAnswers,
+    )
+      ? room.question.payload.correctAnswers
+          .map((value) => Number(value))
+          .filter((value) => Number.isFinite(value))
+      : [];
+    const correctAnswers =
+      normalizedCorrect.length > 0
+        ? normalizedCorrect
+        : Number.isFinite(Number(room.question.payload.correctAnswer))
+          ? [Number(room.question.payload.correctAnswer)]
+          : [];
 
     io.to(pin).emit("end_question", {
       questionId: room.question.startedAt,
@@ -172,7 +201,8 @@ function wireConnection(io: IOServer, socket: Socket) {
       room.question = {
         payload: question,
         startedAt: Date.now(),
-        durationSec: typeof durationSec === "number" && durationSec > 0 ? durationSec : 20,
+        durationSec:
+          typeof durationSec === "number" && durationSec > 0 ? durationSec : 20,
         answered: new Set<string>(),
         perPlayer: {},
         ended: false,
@@ -187,7 +217,7 @@ function wireConnection(io: IOServer, socket: Socket) {
         startedAt: room.question.startedAt,
         durationSec: room.question.durationSec,
       });
-    }
+    },
   );
 
   socket.on("end_question", ({ pin }: { pin: string }) => {
@@ -196,14 +226,18 @@ function wireConnection(io: IOServer, socket: Socket) {
 
   socket.on(
     "player_answer",
-    (data: { pin: string; name: string; answer: number }) => {
+    (data: { pin: string; name: string; answer: number | number[] }) => {
       const room = getRoom(data.pin);
       if (!room.question) return;
       if (room.question.ended) return;
       if (room.question.answered.has(data.name)) return;
 
       room.question.answered.add(data.name);
-      const { correct, points, timeLeftSec } = awardPoints(room, data.name, data.answer);
+      const { correct, points, timeLeftSec } = awardPoints(
+        room,
+        data.name,
+        data.answer,
+      );
       room.question.perPlayer[data.name] = {
         answer: data.answer,
         correct,
@@ -226,7 +260,7 @@ function wireConnection(io: IOServer, socket: Socket) {
       if (totalPlayers > 0 && answeredCount >= totalPlayers) {
         revealQuestionIfActive(data.pin);
       }
-    }
+    },
   );
 
   socket.on("end_game", ({ pin }: { pin: string }) => {
@@ -235,13 +269,12 @@ function wireConnection(io: IOServer, socket: Socket) {
     room.question = undefined;
 
     const leaderboard = computeLeaderboard(room.players);
-    const byName = leaderboard.reduce<Record<string, { score: number; rank: number }>>(
-      (acc, p) => {
-        acc[p.name] = { score: p.score, rank: p.rank };
-        return acc;
-      },
-      {}
-    );
+    const byName = leaderboard.reduce<
+      Record<string, { score: number; rank: number }>
+    >((acc, p) => {
+      acc[p.name] = { score: p.score, rank: p.rank };
+      return acc;
+    }, {});
 
     io.to(pin).emit("end_game", {
       totalPlayers: room.players.length,
@@ -254,7 +287,9 @@ function wireConnection(io: IOServer, socket: Socket) {
   socket.on("disconnect", () => {
     const { pin, name } = socket.data as SocketData;
     if (pin && name) {
-      getRoom(pin).players = getRoom(pin).players.filter((p) => p.name !== name);
+      getRoom(pin).players = getRoom(pin).players.filter(
+        (p) => p.name !== name,
+      );
       io.to(pin).emit("player_left", { name, players: getRoom(pin).players });
       broadcastRoomState(pin);
     }

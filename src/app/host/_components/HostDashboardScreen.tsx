@@ -3,11 +3,13 @@
 import { useHostAuthUser } from "@/app/host/_components/HostAuthProvider";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { BACKGROUND_BASE_CLASS, backgroundStyle } from "@/lib/backgrounds";
 
 type HostDashboardScreenProps = {
   searchTerm: string;
   onSearchTermChange: (value: string) => void;
   quizzes: any[];
+  loadingQuizzes: boolean;
   deletingQuizId: string | null;
   onCreateNewQuiz: () => void;
   onEditQuiz: (quizId: string) => void;
@@ -19,6 +21,7 @@ export function HostDashboardScreen({
   searchTerm,
   onSearchTermChange,
   quizzes,
+  loadingQuizzes,
   deletingQuizId,
   onCreateNewQuiz,
   onEditQuiz,
@@ -115,14 +118,26 @@ export function HostDashboardScreen({
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
-          {quizzes.map((quiz) => (
+        {loadingQuizzes ? (
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-8 text-center text-white/70">
+            Loading quizzes…
+          </div>
+        ) : (
+          <div className="grid grid-cols-3 gap-4">
+            {quizzes.map((quiz) => (
             <div
               key={quiz._id}
               className="rounded-2xl p-4 border border-white/10 bg-white/5 hover:border-white/30 cursor-pointer transition"
               onClick={() => onEditQuiz(quiz._id)}
             >
-              <div className="h-24 rounded-xl bg-linear-to-br from-purple-400/30 to-indigo-500/30 mb-4" />
+              <div
+                className={`h-24 rounded-xl mb-4 ${
+                  quiz.backgroundImage
+                    ? BACKGROUND_BASE_CLASS
+                    : "bg-linear-to-br from-purple-400/30 to-indigo-500/30"
+                }`}
+                style={backgroundStyle(quiz.backgroundImage)}
+              />
 
               <h3 className="text-lg font-semibold mb-1">{quiz.title}</h3>
               <p className="text-sm text-white/60">
@@ -152,8 +167,9 @@ export function HostDashboardScreen({
                 </button>
               </div>
             </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </main>
     </div>
   );

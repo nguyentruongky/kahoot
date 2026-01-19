@@ -55,6 +55,15 @@ export default function HostGamePage() {
   const [joinLinkCopyState, setJoinLinkCopyState] = useState<"idle" | "copied">(
     "idle"
   );
+  const lobbyTrackRef = useRef<string | null>(null);
+  const playingTrackRef = useRef<string | null>(null);
+  const musicRef = useRef<HTMLAudioElement | null>(null);
+  const timeUpRef = useRef<HTMLAudioElement | null>(null);
+  const playingActiveRef = useRef(false);
+  const lastQuestionIdRef = useRef<number | null>(null);
+  const lastTimeUpQuestionIdRef = useRef<number | null>(null);
+  const finalWinPlayedRef = useRef(false);
+  const timedOutRef = useRef(false);
   const joinLinkCopyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null
   );
@@ -330,9 +339,25 @@ export default function HostGamePage() {
     if (questionEnded) return;
     if (timer !== 0) return;
     if (endQuestionSentRef.current) return;
+    const questionId =
+      typeof currentQuestion?.id === "number"
+        ? currentQuestion.id
+        : questionIndex;
+    if (lastTimeUpQuestionIdRef.current !== questionId) {
+      lastTimeUpQuestionIdRef.current = questionId;
+      if (!timeUpRef.current) {
+        timeUpRef.current = new Audio("/music/time-up.mp3");
+        timeUpRef.current.volume = 0.6;
+      }
+      timeUpRef.current.currentTime = 0;
+      timeUpRef.current.play().catch(() => {
+        // Autoplay might be blocked until user interaction.
+      });
+    }
     endQuestionSentRef.current = true;
+    timedOutRef.current = true;
     socket.emit("end_question", { pin });
-  }, [timer, currentQuestion, pin, questionEnded]);
+  }, [timer, currentQuestion, pin, questionEnded, questionIndex]);
 
   useEffect(() => {
     if (!currentQuestion) return;
@@ -340,6 +365,127 @@ export default function HostGamePage() {
       playBeep(660, 90);
     }
   }, [timer, currentQuestion, showResults]);
+
+  useEffect(() => {
+    if (questionEnded) return;
+    if (stage !== "question") return;
+    if (timer !== 0) return;
+    if (!timedOutRef.current) return;
+    // time-up is handled in the timer-expired path above
+  }, [timer, questionEnded, stage]);
+
+  useEffect(() => {
+    if (stage === "final") {
+      if (finalWinPlayedRef.current) return;
+      finalWinPlayedRef.current = true;
+      const wins = ["/music/win-1.mp3", "/music/win-2.mp3"];
+      const pick = wins[Math.floor(Math.random() * wins.length)];
+      const audio = new Audio(pick);
+      audio.volume = 0.6;
+      audio.play().catch(() => {
+        // Autoplay might be blocked until user interaction.
+      });
+      return;
+    }
+    finalWinPlayedRef.current = false;
+  }, [stage]);
+
+  useEffect(() => {
+    const lobbyTracks = [
+      "/music/lobby-1.mp3",
+      "/music/lobby-2.mp3",
+      "/music/lobby-3.mp3",
+    ];
+    const playingTracks = [
+      "/music/playing-1.wav",
+      "/music/playing-2.wav",
+      "/music/playing-3.wav",
+    ];
+
+    const pickRandom = (items: string[]) =>
+      items[Math.floor(Math.random() * items.length)];
+
+    const ensureAudio = () => {
+      if (!musicRef.current) {
+        musicRef.current = new Audio();
+        musicRef.current.volume = 0.45;
+        musicRef.current.preload = "auto";
+      }
+      return musicRef.current;
+    };
+
+    const playTrack = (src: string, loop: boolean) => {
+      const audio = ensureAudio();
+      if (audio.src !== src) {
+        audio.pause();
+        audio.src = src;
+      }
+      audio.loop = loop;
+      if (!playingActiveRef.current) {
+        audio.currentTime = 0;
+      }
+      audio.play().catch(() => {
+        // Autoplay might be blocked until user interaction.
+      });
+      playingActiveRef.current = true;
+    };
+
+    const stopTrack = () => {
+      if (!musicRef.current) return;
+      musicRef.current.pause();
+      musicRef.current.currentTime = 0;
+      playingActiveRef.current = false;
+    };
+
+    const questionId =
+      typeof currentQuestion?.id === "number"
+        ? currentQuestion.id
+        : currentQuestion
+          ? questionIndex
+          : null;
+    if (questionId !== lastQuestionIdRef.current) {
+      playingActiveRef.current = false;
+      timedOutRef.current = false;
+      lastQuestionIdRef.current = questionId;
+    }
+
+    if (stage === "lobby") {
+      if (!lobbyTrackRef.current) {
+        lobbyTrackRef.current = pickRandom(lobbyTracks);
+      }
+      playTrack(lobbyTrackRef.current, true);
+      return;
+    }
+
+    if (stage === "question") {
+      if (showResults || questionEnded) {
+        stopTrack();
+        return;
+      }
+      if (!playingTrackRef.current) {
+        playingTrackRef.current = pickRandom(playingTracks);
+      }
+      playTrack(playingTrackRef.current, true);
+      return;
+    }
+
+    stopTrack();
+  }, [stage, showResults, questionEnded, currentQuestion, questionIndex]);
+
+  useEffect(() => {
+    return () => {
+      if (musicRef.current) {
+        musicRef.current.pause();
+        musicRef.current.src = "";
+        musicRef.current = null;
+      }
+      if (timeUpRef.current) {
+        timeUpRef.current.pause();
+        timeUpRef.current.src = "";
+        timeUpRef.current = null;
+      }
+    };
+  }, []);
 
   const finalizeGame = () => {
     socket.emit("end_game", { pin });

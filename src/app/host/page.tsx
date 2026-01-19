@@ -37,6 +37,7 @@ export default function HostPage() {
 
   // QUIZZES
   const [quizzes, setQuizzes] = useState<any[]>([]);
+  const [loadingQuizzes, setLoadingQuizzes] = useState(false);
   const [activeQuizTitle, setActiveQuizTitle] = useState("");
   const [deletingQuizId, setDeletingQuizId] = useState<string | null>(null);
 
@@ -79,10 +80,15 @@ export default function HostPage() {
   const backgroundInputRef = useRef<HTMLInputElement>(null);
   const [copyToast, setCopyToast] = useState("");
 
-  const refreshQuizzes = () => {
-    fetch("/api/quizzes")
-      .then((res) => res.json())
-      .then((data) => setQuizzes(data));
+  const refreshQuizzes = async () => {
+    setLoadingQuizzes(true);
+    try {
+      const res = await fetch("/api/quizzes");
+      const data = await res.json();
+      setQuizzes(data);
+    } finally {
+      setLoadingQuizzes(false);
+    }
   };
 
   const deleteQuiz = async (quizId: string, quizTitle?: string) => {
@@ -726,6 +732,7 @@ export default function HostPage() {
         searchTerm={searchTerm}
         onSearchTermChange={setSearchTerm}
         quizzes={filteredQuizzes}
+        loadingQuizzes={loadingQuizzes}
         deletingQuizId={deletingQuizId}
         onCreateNewQuiz={createNewQuiz}
         onEditQuiz={startEditingQuiz}

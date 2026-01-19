@@ -434,11 +434,21 @@ export default function HostGamePage() {
       return musicRef.current;
     };
 
+    const resolveSrc = (src: string) => {
+      try {
+        return new URL(src, window.location.href).toString();
+      } catch {
+        return src;
+      }
+    };
+
     const playTrack = (src: string, loop: boolean) => {
       const audio = ensureAudio();
-      if (audio.src !== src) {
+      const resolvedSrc = resolveSrc(src);
+      const currentSrc = audio.currentSrc || audio.src;
+      if (currentSrc !== resolvedSrc) {
         audio.pause();
-        audio.src = src;
+        audio.src = resolvedSrc;
       }
       audio.loop = loop;
       if (!playingActiveRef.current) {

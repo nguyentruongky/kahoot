@@ -198,7 +198,7 @@ export function HostQuestionScreen({
                 <>
                   <div className="flex min-h-0 flex-1 items-end justify-center pb-2 pt-6">
                     <div className="w-full max-w-6xl">
-                      <div className="relative h-[46vh] min-h-[320px] max-h-[460px]">
+                      <div className="relative h-[46vh] min-h-80 max-h-[460px]">
                         <div
                           className="absolute inset-0 grid h-full items-stretch justify-center gap-3 px-4"
                           style={{
@@ -211,7 +211,8 @@ export function HostQuestionScreen({
                             const heightPct = (count / maxCount) * 100;
                             const barHeight =
                               count === 0 ? 0 : Math.max(18, heightPct);
-                            const isCorrect = correctAnswers.includes(optionIndex);
+                            const isCorrect =
+                              correctAnswers.includes(optionIndex);
 
                             return (
                               <div
@@ -258,7 +259,7 @@ export function HostQuestionScreen({
                       return (
                         <div
                           key={index}
-                          className={`relative h-[112px] ${meta[index % 4].tile}`}
+                          className={`relative h-28 ${meta[index % 4].tile}`}
                         >
                           <div className="relative flex h-full items-center justify-between px-8">
                             <div className="flex items-center gap-5">

@@ -1,6 +1,6 @@
 "use client";
 
-type HostStage = "dashboard" | "builder" | "lobby" | "question" | "final";
+type HostStage = "dashboard" | "lobby" | "question" | "final";
 
 type HostConsoleHeaderProps = {
   stage: HostStage;
@@ -42,4 +42,3 @@ export function HostConsoleHeader({
     </header>
   );
 }
-
